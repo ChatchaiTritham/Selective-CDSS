@@ -51,6 +51,8 @@ figures can be restyled or redrawn at any time **without** retraining.
 ## Installation
 
 ```bash
+git clone https://github.com/ChatchaiTritham/Selective-CDSS.git
+cd Selective-CDSS
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .            # installs deps + the vendored basics_cdss package
 ```

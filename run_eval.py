@@ -43,6 +43,31 @@ TARGET_FNR = 0.05
 rng = np.random.RandomState(SEED)
 OUT = Path(__file__).parent
 
+# ---- Top-Tier figure style (canonical _management/FIGURE_STYLE.md) ----------
+# Color-blind-safe Okabe-Ito palette; use in this order so series colors stay
+# consistent across every figure and every repo.
+PALETTE = ["#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00", "#56B4E9", "#000000"]
+
+
+def apply_pub_style():
+    """Publication-grade matplotlib rcParams. Call once before plotting."""
+    import matplotlib as mpl
+    mpl.rcParams.update({
+        "figure.dpi": 150, "savefig.dpi": 300, "savefig.bbox": "tight",
+        "savefig.pad_inches": 0.02,
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "Times", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
+        "font.size": 10, "axes.titlesize": 11, "axes.labelsize": 10,
+        "xtick.labelsize": 9, "ytick.labelsize": 9, "legend.fontsize": 9,
+        "axes.spines.top": False, "axes.spines.right": False,
+        "axes.linewidth": 0.8, "axes.grid": True,
+        "grid.alpha": 0.3, "grid.linewidth": 0.6,
+        "lines.linewidth": 1.6, "lines.markersize": 5,
+        "legend.frameon": False, "figure.constrained_layout.use": True,
+        "axes.prop_cycle": mpl.cycler(color=PALETTE),
+    })
+
 BASELINES = {
     "sepsis": (SepsisModel, {
         "blood_pressure_sys": (118, 18), "heart_rate": (92, 18), "lactate": (2.2, 1.1),
@@ -295,38 +320,67 @@ def main():
         {k: v for k, v in results.items()}, indent=2, default=lambda o: float(o)))
     print("[OK] real_results.json")
 
-    # ---- figures ----
+    # ---- figures (Top-Tier publication style; data is live, never hardcoded) --
     try:
         import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
-        # risk-coverage at moderate MCAR
+        apply_pub_style()
+        C_CURVE, C_TARGET, C_OP = PALETTE[0], PALETTE[1], PALETTE[2]   # blue / orange / green
+
+        def _save(fig, stem):
+            """Save vector PDF + 300-dpi PNG (same basename, bbox tight)."""
+            fig.savefig(OUT / f"{stem}.pdf")
+            fig.savefig(OUT / f"{stem}.png", dpi=300)
+
+        # --- Figure 1: risk-coverage curve at moderate MCAR ---
         cov_c, risk_c, _ = coverage_risk_curve(y_te, e["p_te"])
         aurc = area_under_risk_coverage_curve(cov_c, risk_c)
-        fig, ax = plt.subplots(figsize=(5, 3.4))
-        ax.plot(cov_c, risk_c, lw=2, color="#1C4E80", label=f"risk-coverage (AURC={aurc:.3f})")
-        ax.axhline(TARGET_FNR, ls="--", color="#C06800", label="target FNR 0.05")
-        ax.scatter([e["coverage"]], [e["retained_fnr_test"]], color="#007040", zorder=5,
-                   label=f"LTT op. point (cov={e['coverage']:.2f})")
-        ax.set_xlabel("Coverage"); ax.set_ylabel("Selective FNR (test)")
-        ax.set_title("Risk-controlled selective prediction (moderate MCAR)")
-        ax.legend(fontsize=7); ax.grid(alpha=0.3); fig.tight_layout()
-        fig.savefig(OUT / "fig_risk_coverage.pdf"); fig.savefig(OUT / "fig_risk_coverage.png", dpi=300)
+        fig, ax = plt.subplots(figsize=(3.5, 2.7))
+        ax.plot(cov_c, risk_c, color=C_CURVE, marker="", linestyle="-",
+                label=f"Risk–coverage (AURC = {aurc:.3f})")
+        ax.axhline(TARGET_FNR, color=C_TARGET, linestyle="--", linewidth=1.4,
+                   label=f"Target FNR = {TARGET_FNR:.2f}")
+        ax.scatter([e["coverage"]], [e["retained_fnr_test"]], color=C_OP, marker="D",
+                   s=42, zorder=5, edgecolor="white", linewidth=0.6,
+                   label=f"LTT operating point (cov = {e['coverage']:.2f})")
+        ax.set_xlabel("Coverage (fraction of cases retained)")
+        ax.set_ylabel("Selective false-negative rate (test)")
+        ax.set_title("Risk-controlled selective prediction\n(moderate MCAR degradation)")
+        ax.set_xlim(0, 1.0)
+        ax.set_ylim(bottom=0)
+        ax.legend(loc="upper right")
+        _save(fig, "fig_risk_coverage")
 
-        # ablation: baseline vs retained-FNR (test) across MCAR levels
-        labs = [a["level"] for a in abl]
+        # --- Figure 2: degradation ablation (baseline vs retained FNR + abstention) ---
+        labs = [a["level"].capitalize() for a in abl]
         bf = [a["base_fnr"] for a in abl]; rf = [a["retained_fnr_test"] for a in abl]
         ab = [a["abstention"] for a in abl]; x = np.arange(len(labs))
-        fig2, a1 = plt.subplots(figsize=(5, 3.4))
-        a1.plot(x, bf, "o-", color="#C0392B", lw=2, label="Baseline FNR (no abstention)")
-        a1.plot(x, rf, "s-", color="#007040", lw=2, label="LTT retained FNR (test)")
-        a1.axhline(TARGET_FNR, ls="--", color="#888", label="target 0.05")
-        a1.set_xticks(x); a1.set_xticklabels(labs); a1.set_ylabel("False-negative rate")
-        a1.set_xlabel("Data-quality degradation (MCAR)")
-        a2 = a1.twinx(); a2.bar(x, ab, alpha=0.15, color="#1C4E80", width=0.5)
-        a2.set_ylabel("Abstention", color="#1C4E80"); a2.set_ylim(0, 1)
+        fig2, a1 = plt.subplots(figsize=(3.7, 2.9))
+        # abstention as background bars on the secondary axis (drawn first, behind lines)
+        a2 = a1.twinx()
+        bars = a2.bar(x, ab, width=0.55, color=PALETTE[5], alpha=0.30,
+                      label="Abstention rate", zorder=1)
+        a2.set_ylabel("Abstention rate")
+        a2.set_ylim(0, 1)
+        a2.spines["top"].set_visible(False)
+        a2.spines["right"].set_visible(True)   # twin axis needs its own spine
+        a2.grid(False)
+        # FNR lines on the primary axis (on top)
+        l1, = a1.plot(x, bf, color=PALETTE[1], marker="o", linestyle="-",
+                      zorder=3, label="Baseline FNR (no abstention)")
+        l2, = a1.plot(x, rf, color=PALETTE[2], marker="s", linestyle="-",
+                      zorder=3, label="LTT retained FNR (test)")
+        lt = a1.axhline(TARGET_FNR, color=PALETTE[6], linestyle=":", linewidth=1.4,
+                        zorder=2, label=f"Target FNR = {TARGET_FNR:.2f}")
+        a1.set_xticks(x); a1.set_xticklabels(labs)
+        a1.set_ylabel("False-negative rate")
+        a1.set_xlabel("Data-quality degradation (MCAR severity)")
+        a1.set_ylim(bottom=0)
+        a1.set_zorder(a2.get_zorder() + 1)     # keep line axis above the bars
+        a1.patch.set_visible(False)
         a1.set_title("Safety holds as data quality degrades")
-        a1.legend(fontsize=7, loc="upper left"); a1.grid(alpha=0.3); fig2.tight_layout()
-        fig2.savefig(OUT / "fig_ablation.pdf"); fig2.savefig(OUT / "fig_ablation.png", dpi=300)
-        print("[OK] figures")
+        a1.legend(handles=[l1, l2, lt, bars], loc="upper left")
+        _save(fig2, "fig_ablation")
+        print("[OK] figures (publication style)")
     except Exception as ex:
         print("[WARN] figure skipped:", repr(ex))
 

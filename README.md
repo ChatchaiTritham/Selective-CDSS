@@ -26,9 +26,12 @@ All figures below come straight from `run_eval.py` (seed 42, synthetic digital-t
 
 ```
 Selective-CDSS/
-├── run_eval.py              # single seeded driver: cohort → models → all experiments → results + figures
+├── run_eval.py              # COMPUTE entry: cohort → models → all experiments → results/ (numbers + figure arrays)
+├── scripts/
+│   └── generate_figures.py  # PLOTTING module: reads results/ and draws the figures (no recompute)
+├── pubviz.py                # shared, byte-identical Top-Tier figure style (palette / rcParams / save_fig)
 ├── results/
-│   └── real_results.json    # committed reference output (every manuscript number)
+│   └── real_results.json    # committed reference output (every manuscript number + persisted figure arrays)
 ├── figures/
 │   ├── fig_risk_coverage.{pdf,png}
 │   └── fig_ablation.{pdf,png}
@@ -37,6 +40,13 @@ Selective-CDSS/
 ├── setup.py                 # installs deps + the vendored package
 └── LICENSE
 ```
+
+Compute and plotting are separated. `run_eval.py` trains the models and persists
+**every number and every figure array** (coverage-risk curves, the bootstrap CI
+band, the baseline curves, and the ablation series) to `results/real_results.json`.
+`scripts/generate_figures.py` only **reads** that file and renders the figures via
+`from pubviz import apply_pub_style, save_fig, PALETTE, load_results`, so the
+figures can be restyled or redrawn at any time **without** retraining.
 
 ## Installation
 
@@ -48,17 +58,18 @@ pip install -e .            # installs deps + the vendored basics_cdss package
 ## Reproducing the results
 
 ```bash
-python run_eval.py          # fixed seed 42; ~1 min on a standard CPU workstation
+python run_eval.py                  # COMPUTE: fixed seed 42; ~1 min on a standard CPU workstation
+python scripts/generate_figures.py  # PLOT ONLY: redraw figures from results/ (no retraining)
 ```
 
-The driver writes `real_results.json` plus `fig_risk_coverage.{pdf,png}` and `fig_ablation.{pdf,png}` to the repository root; the committed reference copies live in `results/` and `figures/`. Because the cohort, the train/calibration/test split, the random forest, and the degradation operators are all seeded at 42, the JSON metrics reproduce exactly run to run on the same machine. The PNG/PDF images depend on your matplotlib build, so the plotted data matches while the rendered bytes need not.
+`run_eval.py` writes `real_results.json` (a root mirror plus the committed copy in `results/`) and, for convenience, calls the figure module at the end so a single command reproduces everything. The figures themselves are produced by `scripts/generate_figures.py`, which reads `results/real_results.json` and writes `fig_risk_coverage.{pdf,png}` and `fig_ablation.{pdf,png}` into both `figures/` and the repository root. Because the cohort, the train/calibration/test split, the random forest, the degradation operators, and the figure bootstrap are all seeded at 42, the JSON metrics and persisted figure arrays reproduce exactly run to run on the same machine. The PNG/PDF images depend on your matplotlib build, so the plotted data matches while the rendered bytes need not.
 
 ## Results and figures
 
-- `figures/fig_risk_coverage.png` — Risk–coverage curve under moderate MCAR with the LTT operating point marked. Read it as: the curve traces how selective FNR falls as the service keeps fewer cases, and the marked point sits below the dashed 5% target while still retaining about two-thirds of inputs.
-- `figures/fig_ablation.png` — Two lines across the MCAR severity sweep (clean → severe), with abstention shown as bars on the right axis. The take-away is the gap: the baseline-FNR line rises and crosses the 5% target, while the retained-FNR line stays flat near the floor as abstention climbs to absorb the degradation.
+- `figures/fig_risk_coverage.png` — Selective FNR versus coverage under moderate MCAR. The acceptance-threshold and softmax-response (SR) curves are overlaid, a 95% bootstrap confidence band surrounds the SR curve, the safe (FNR ≤ 5%) region is shaded, the split-conformal singleton operating point is marked, and the LTT operating point sits inside the safe zone while still retaining about two-thirds of inputs.
+- `figures/fig_ablation.png` — Two vertically-stacked panels sharing the MCAR-severity axis (clean → severe). The top panel contrasts baseline FNR (no abstention) against LTT-retained FNR with the 5% target line; the bottom panel shows the abstention rate. The take-away is the gap: the baseline line rises and crosses the 5% target while the retained line stays near the floor, with abstention in the lower panel climbing to absorb the degradation. (This replaces the earlier dual-axis chart — stacked aligned panels avoid the dual-axis scale ambiguity.)
 
-Both figures are drawn from the live arrays computed during the run (the coverage-risk curve and the per-level results), not from any table of pre-typed values. The underlying metric functions in `src/basics_cdss/metrics/coverage_risk.py` compute curves and AURC from the data passed in; there are no hardcoded results in the plotting code.
+Both figures are drawn from arrays persisted to `results/real_results.json` by `run_eval.py` (the coverage-risk and baseline curves, the bootstrap band, and the per-level ablation series), not from any table of pre-typed values. The plotting module recomputes nothing: it reads those arrays and renders them, so there are no hardcoded results in the figure code.
 
 ## Data
 

@@ -1,67 +1,68 @@
-# Selective-CDSS — Distribution-Free Safety Guarantees for AI Decision Services under Degraded Data Quality
+# Risk-Controlled Selective Prediction for Clinical Decision Services (Selective-CDSS)
 
-Reproducibility code for the manuscript:
+> Wraps any probabilistic clinical classifier in an abstention layer that holds the false-negative rate of the decisions it keeps below a chosen ceiling, even when the incoming data is messy.
 
-> **Distribution-Free Safety Guarantees for AI Decision Services under Degraded
-> Data Quality via Risk-Controlled Selective Prediction**
-> (target: *ICT Express*, Elsevier/KICS)
+![License](https://img.shields.io/badge/license-MIT-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![Reproducible](https://img.shields.io/badge/reproducible-seed--42-success)
 
-The method wraps any probabilistic clinical classifier in a **Learn-Then-Test
-(LTT) conformal risk controller** that abstains near the decision boundary so the
-**false-negative rate (FNR) on retained cases stays below a target** (here 5%),
-even as input data quality degrades. Evaluation runs on a controlled digital-twin
-testbed (sepsis / ARDS / cardiac) from the `basics_cdss` library.
+## Overview
 
-## What is in this repository
+A clinical model that scores well on clean data can quietly become unsafe once the inputs it sees in the field start to degrade — sensors drop out, values go missing, readings get noisy. The error that hurts patients most, a missed positive, has no built-in ceiling: as data quality slips, the false-negative rate (FNR) drifts upward with nothing to stop it. We treat that drift as the problem to solve rather than something to average away.
 
-| Path | Contents |
-|------|----------|
-| `run_eval.py` | Single seeded driver (`SEED=42`) — builds the cohort, fits the models, runs every experiment, writes results + figures |
-| `results/real_results.json` | Committed reference output (the numbers reported in the manuscript) |
-| `src/basics_cdss/` | Vendored simulation + metrics library, so the repo is self-contained |
-| `figures/` | Pre-generated `fig_risk_coverage` and `fig_ablation` (PDF + PNG) |
+The approach here is deliberately model-agnostic. Instead of retraining or recalibrating, we add a thin wrapper around the classifier's probability output. A Learn-Then-Test (LTT) step searches a calibration fold for the most permissive decision threshold whose FNR still meets a stated target; cases that fall too close to that threshold are not predicted at all but handed back to a clinician. Every reported quantity — FNR, coverage, and harm — is read off the same retained set on a held-out test fold, so the safety claim and the cost of achieving it are measured under one consistent policy.
 
-This is **not** a skeleton: every number in the manuscript is produced by
-`run_eval.py`. No values are hardcoded in figure scripts.
+This repository is self-contained. The simulation and metrics library (`basics_cdss`) is vendored, and a single seeded driver rebuilds the cohort, fits the models, and regenerates every number and figure that appears in the companion manuscript. Nothing is copied by hand from one place to another.
 
-## Reproduce (≈1 minute, CPU only)
+## Key results
+
+All figures below come straight from `run_eval.py` (seed 42, synthetic digital-twin cohort, in-distribution only — no human subjects).
+
+- On clean test data the base model is strong (accuracy 98.6%, baseline FNR 3.1%); the wrapper trims retained FNR to 1.1% while abstaining on under 2% of cases.
+- Push the data harder and the unguarded baseline FNR climbs to 25.8% under severe MCAR and to 21.6% under value-dependent (MNAR) missingness — both well past the 5% target.
+- Across clean, three missingness mechanisms, and a severity sweep, the wrapped service keeps retained-decision test FNR at or below 2.2%, paying for it with abstention that grows from ~2% to ~37%.
+- At moderate MCAR, full automation lets 10 positives through; the wrapper misses 4 among retained cases and defers the rest.
+- Swapping in a weaker base model (logistic regression) drove baseline FNR to 38.1%, and the LTT step declined to certify the target rather than return an unsafe threshold — the intended failure mode.
+
+## Repository structure
+
+```
+Selective-CDSS/
+├── run_eval.py              # single seeded driver: cohort → models → all experiments → results + figures
+├── results/
+│   └── real_results.json    # committed reference output (every manuscript number)
+├── figures/
+│   ├── fig_risk_coverage.{pdf,png}
+│   └── fig_ablation.{pdf,png}
+├── src/basics_cdss/         # vendored simulation + metrics library (disease models, conformal, coverage-risk, harm)
+├── requirements.txt
+├── setup.py                 # installs deps + the vendored package
+└── LICENSE
+```
+
+## Installation
 
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e .            # installs deps + the vendored basics_cdss package
-python run_eval.py
 ```
 
-This writes `real_results.json` and `fig_risk_coverage.{pdf,png}` /
-`fig_ablation.{pdf,png}` to the repository root. Compare against the committed
-`results/real_results.json` — the run is deterministic (`seed=42`), so the files
-match bit-stably across machines.
+## Reproducing the results
 
-## Headline results (`results/real_results.json`)
+```bash
+python run_eval.py          # fixed seed 42; ~1 min on a standard CPU workstation
+```
 
-Cohort: 1,140 simulated trajectories (380 per disease), 48 features, prevalence
-0.34, split 570 / 285 / 285 (train / calibration / test). Target FNR = 0.05,
-abstention band `|p − τ| < 0.10`.
+The driver writes `real_results.json` plus `fig_risk_coverage.{pdf,png}` and `fig_ablation.{pdf,png}` to the repository root; the committed reference copies live in `results/` and `figures/`. Because the cohort, the train/calibration/test split, the random forest, and the degradation operators are all seeded at 42, the JSON metrics reproduce exactly run to run on the same machine. The PNG/PDF images depend on your matplotlib build, so the plotted data matches while the rendered bytes need not.
 
-| Condition | Baseline FNR (no abstention) | LTT retained FNR (test) | Abstention | Risk controlled |
-|-----------|------------------------------|--------------------------|------------|-----------------|
-| Clean | 0.031 | 0.011 | 0.018 | ✅ |
-| MCAR (rate 0.35, σ 0.6) | 0.103 | 0.022 | 0.351 | ✅ |
-| MAR | 0.227 | 0.000 | 0.344 | ✅ |
-| MNAR | 0.216 | 0.011 | 0.375 | ✅ |
-| Severe MCAR (0.50, σ 0.9) | 0.258 | 0.012 | 0.372 | ✅ |
+## Results and figures
 
-Baseline comparison at moderate MCAR (target FNR 0.05): only LTT *targets* FNR
-with a certified guarantee — full automation 0.103, softmax-response 0.052,
-split-conformal 0.048, **LTT 0.022** (coverage 0.65).
+- `figures/fig_risk_coverage.png` — Risk–coverage curve under moderate MCAR with the LTT operating point marked. Read it as: the curve traces how selective FNR falls as the service keeps fewer cases, and the marked point sits below the dashed 5% target while still retaining about two-thirds of inputs.
+- `figures/fig_ablation.png` — Two lines across the MCAR severity sweep (clean → severe), with abstention shown as bars on the right axis. The take-away is the gap: the baseline-FNR line rises and crosses the 5% target, while the retained-FNR line stays flat near the floor as abstention climbs to absorb the degradation.
 
-## Method coverage
+Both figures are drawn from the live arrays computed during the run (the coverage-risk curve and the per-level results), not from any table of pre-typed values. The underlying metric functions in `src/basics_cdss/metrics/coverage_risk.py` compute curves and AURC from the data passed in; there are no hardcoded results in the plotting code.
 
-`run_eval.py` produces, all on the test fold under one consistent abstention
-policy: (i) clean reference, (ii) three missingness mechanisms (MCAR / MAR /
-MNAR), (iii) an MCAR severity sweep, (iv) a model-agnostic check (logistic
-regression), (v) a baseline comparison (full automation, softmax-response,
-split-conformal, LTT), and (vi) harm-by-risk-tier on the retained set.
+## Data
+
+The cohort is fully synthetic: 1,140 simulated patient trajectories (380 each for sepsis, ARDS, and cardiac models from the vendored `basics_cdss` digital-twin library), 48 summary features, prevalence 0.34, split 570 / 285 / 285 for train / calibration / test. Degradation is applied with documented operators — a library noise operator plus MCAR, MAR, and MNAR missingness masks — so no real patient records are involved and no ethics approval is required.
 
 ## Citation
 
@@ -71,15 +72,20 @@ split-conformal, LTT), and (vi) harm-by-risk-tier on the retained set.
             Degraded Data Quality via Risk-Controlled Selective Prediction},
   author = {Tritham, Chatchai and Snae Namahoot, Chakkrit},
   year   = {2026},
-  note   = {Manuscript under review}
+  note   = {Manuscript under review (ICT Express)}
 }
 ```
 
-Licensed under the MIT License (see `LICENSE`). The vendored `basics_cdss`
-package is part of the companion project
-[BASICS-CDSS](https://github.com/ChatchaiTritham/BASICS-CDSS).
+## License
 
-## Portfolio Relationship
+Released under the MIT License (see `LICENSE`). The vendored `basics_cdss` package belongs to the companion project [BASICS-CDSS](https://github.com/ChatchaiTritham/BASICS-CDSS).
+
+## Contact
+
+**Chatchai Tritham** — Department of Computer Science and Information Technology, Faculty of Science, Naresuan University, Phitsanulok 65000, Thailand. Email: chatchait66@nu.ac.th · ORCID: 0000-0001-7899-228X
+**Chakkrit Snae Namahoot** — same affiliation. Email: chakkrits@nu.ac.th · ORCID: 0000-0003-4660-4590
+
+## Portfolio relationship
 
 | Repository | Role |
 |---|---|
@@ -94,15 +100,3 @@ package is part of the companion project
 | Selective-CDSS | Risk-controlled selective-prediction (abstention) component |
 | Causal-CDSS | Causal-inference evaluation component |
 | Beyond-Accuracy | Simulation-based safety/calibration evaluation framework |
-
-## Contact
-
-**Chatchai Tritham**  
-Department of Computer Science and Information Technology, Faculty of Science, Naresuan University, Phitsanulok 65000, Thailand  
-Email: chatchait66@nu.ac.th  
-ORCID: 0000-0001-7899-228X
-
-**Chakkrit Snae Namahoot**  
-Department of Computer Science and Information Technology, Faculty of Science, Naresuan University, Phitsanulok 65000, Thailand  
-Email: chakkrits@nu.ac.th  
-ORCID: 0000-0003-4660-4590

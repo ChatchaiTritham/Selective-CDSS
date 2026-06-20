@@ -13,8 +13,22 @@ FIXES vs v1:
 
 All numbers are REAL outputs of the basics_cdss library + standard, explicitly
 documented missingness operators. No mock data.
+
+Architecture (separation of concerns):
+  * This module is the COMPUTE entry. It rebuilds the cohort, fits the models,
+    runs every experiment, and persists ALL numbers AND the arrays the figures
+    need (coverage-risk curves, bootstrap CI band, baseline curves, ablation
+    series) to results/real_results.json.
+  * Plotting lives in the importable module scripts/generate_figures.py, which
+    READS results/ and draws the figures. It never recomputes science.
+  * For convenience run_eval.py calls that figure module at the very end, but
+    the figures can be restyled/redrawn at any time WITHOUT retraining by just
+    running:  python scripts/generate_figures.py
+
 Run:  python run_eval.py
-Out:  real_results.json  +  fig_risk_coverage.pdf/.png  +  fig_ablation.pdf/.png
+Out:  results/real_results.json (+ real_results.json mirror at repo root)
+      figures/fig_risk_coverage.{pdf,png}  figures/fig_ablation.{pdf,png}
+      (mirrored to repo root for the README)
 """
 import json
 import numpy as np
@@ -316,73 +330,133 @@ def main():
         "n_abstained": int((~retained).sum()),
         "deferred_pos": int((y_te[~retained] == 1).sum())}
 
-    (OUT / "real_results.json").write_text(json.dumps(
-        {k: v for k, v in results.items()}, indent=2, default=lambda o: float(o)))
-    print("[OK] real_results.json")
+    # ---- figure_data: persist EVERY array the figures need (seed-42 stable) ---
+    # Separation of concerns: compute the curves HERE so generate_figures.py can
+    # restyle/redraw without ever recomputing the science. Same moderate-MCAR
+    # test fold (p_te, y_te) used by the harm block above.
+    results["figure_data"] = build_figure_data(
+        y_te=y_te, p_te=p_te, retained=retained,
+        cp_ret=cp_ret, ltt_coverage=ltt_cov,
+        ltt_op=(float(e["coverage"]), float(e["retained_fnr_test"])),
+        ablation=abl, target_fnr=TARGET_FNR)
 
-    # ---- figures (Top-Tier publication style; data is live, never hardcoded) --
+    payload = json.dumps({k: v for k, v in results.items()},
+                         indent=2, default=lambda o: float(o))
+    # Root mirror (what the determinism test reads via monkeypatched OUT) ...
+    (OUT / "real_results.json").write_text(payload)
+    # ... and the committed reference copy under results/ (derived from OUT so
+    # the slow test stays isolated to its tmp dir).
+    results_subdir = OUT / "results"
+    results_subdir.mkdir(parents=True, exist_ok=True)
+    (results_subdir / "real_results.json").write_text(payload)
+    print("[OK] real_results.json (root mirror + results/)")
+
+    # ---- figures: delegate to the importable plotting module (reads results/) -
+    # run_eval stays the COMPUTE entry; the figure CODE lives in the module so it
+    # can be re-run standalone. We pass start=OUT so it resolves the just-written
+    # results/ (works under the monkeypatched tmp dir too).
     try:
-        import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
-        apply_pub_style()
-        C_CURVE, C_TARGET, C_OP = PALETTE[0], PALETTE[1], PALETTE[2]   # blue / orange / green
+        from scripts.generate_figures import generate_all
+        generate_all(start=OUT, out_dirs=(OUT / "figures", OUT))
+    except Exception as ex:                                   # pragma: no cover
+        print("[WARN] figure step skipped:", repr(ex))
 
-        def _save(fig, stem):
-            """Save vector PDF + 300-dpi PNG (same basename, bbox tight)."""
-            fig.savefig(OUT / f"{stem}.pdf")
-            fig.savefig(OUT / f"{stem}.png", dpi=300)
 
-        # --- Figure 1: risk-coverage curve at moderate MCAR ---
-        cov_c, risk_c, _ = coverage_risk_curve(y_te, e["p_te"])
-        aurc = area_under_risk_coverage_curve(cov_c, risk_c)
-        fig, ax = plt.subplots(figsize=(3.5, 2.7))
-        ax.plot(cov_c, risk_c, color=C_CURVE, marker="", linestyle="-",
-                label=f"Risk–coverage (AURC = {aurc:.3f})")
-        ax.axhline(TARGET_FNR, color=C_TARGET, linestyle="--", linewidth=1.4,
-                   label=f"Target FNR = {TARGET_FNR:.2f}")
-        ax.scatter([e["coverage"]], [e["retained_fnr_test"]], color=C_OP, marker="D",
-                   s=42, zorder=5, edgecolor="white", linewidth=0.6,
-                   label=f"LTT operating point (cov = {e['coverage']:.2f})")
-        ax.set_xlabel("Coverage (fraction of cases retained)")
-        ax.set_ylabel("Selective false-negative rate (test)")
-        ax.set_title("Risk-controlled selective prediction\n(moderate MCAR degradation)")
-        ax.set_xlim(0, 1.0)
-        ax.set_ylim(bottom=0)
-        ax.legend(loc="upper right")
-        _save(fig, "fig_risk_coverage")
+def _selective_fnr_by_coverage(y_true, p, coverage_grid, order="confidence"):
+    """Selective FNR as a function of coverage for one ranking policy.
 
-        # --- Figure 2: degradation ablation (baseline vs retained FNR + abstention) ---
-        labs = [a["level"].capitalize() for a in abl]
-        bf = [a["base_fnr"] for a in abl]; rf = [a["retained_fnr_test"] for a in abl]
-        ab = [a["abstention"] for a in abl]; x = np.arange(len(labs))
-        fig2, a1 = plt.subplots(figsize=(3.7, 2.9))
-        # abstention as background bars on the secondary axis (drawn first, behind lines)
-        a2 = a1.twinx()
-        bars = a2.bar(x, ab, width=0.55, color=PALETTE[5], alpha=0.30,
-                      label="Abstention rate", zorder=1)
-        a2.set_ylabel("Abstention rate")
-        a2.set_ylim(0, 1)
-        a2.spines["top"].set_visible(False)
-        a2.spines["right"].set_visible(True)   # twin axis needs its own spine
-        a2.grid(False)
-        # FNR lines on the primary axis (on top)
-        l1, = a1.plot(x, bf, color=PALETTE[1], marker="o", linestyle="-",
-                      zorder=3, label="Baseline FNR (no abstention)")
-        l2, = a1.plot(x, rf, color=PALETTE[2], marker="s", linestyle="-",
-                      zorder=3, label="LTT retained FNR (test)")
-        lt = a1.axhline(TARGET_FNR, color=PALETTE[6], linestyle=":", linewidth=1.4,
-                        zorder=2, label=f"Target FNR = {TARGET_FNR:.2f}")
-        a1.set_xticks(x); a1.set_xticklabels(labs)
-        a1.set_ylabel("False-negative rate")
-        a1.set_xlabel("Data-quality degradation (MCAR severity)")
-        a1.set_ylim(bottom=0)
-        a1.set_zorder(a2.get_zorder() + 1)     # keep line axis above the bars
-        a1.patch.set_visible(False)
-        a1.set_title("Safety holds as data quality degrades")
-        a1.legend(handles=[l1, l2, lt, bars], loc="upper left")
-        _save(fig2, "fig_ablation")
-        print("[OK] figures (publication style)")
-    except Exception as ex:
-        print("[WARN] figure skipped:", repr(ex))
+    Retain the top-`c` fraction of cases by `order`, predict (p>=0.5), and report
+    the FNR among retained positives. `order`:
+      * "confidence" -> rank by max(p, 1-p) desc  (softmax-response baseline)
+      * "threshold"  -> accept cases with p>=tau, tau swept high->low (the
+                        acceptance-threshold sweep behind the original AURC).
+    Returns an FNR array aligned to coverage_grid (NaN where undefined).
+    """
+    y_true = np.asarray(y_true); p = np.asarray(p)
+    n = len(p)
+    out = np.full(len(coverage_grid), np.nan)
+    if n == 0:
+        return out
+    if order == "confidence":
+        rank = np.argsort(-np.maximum(p, 1 - p))      # most-confident first
+        for i, c in enumerate(coverage_grid):
+            k = int(round(c * n))
+            if k <= 0:
+                continue
+            idx = rank[:k]
+            out[i] = fnr_at(y_true[idx], p[idx], 0.5)
+    else:  # acceptance-threshold sweep
+        for i, c in enumerate(coverage_grid):
+            k = int(round(c * n))
+            if k <= 0:
+                continue
+            tau = np.sort(p)[::-1][min(k, n) - 1]      # threshold giving ~k accepted
+            acc = p >= tau
+            if acc.sum() == 0:
+                continue
+            out[i] = fnr_at(y_true[acc], p[acc], 0.5)
+    return out
+
+
+def build_figure_data(y_te, p_te, retained, cp_ret, ltt_coverage, ltt_op,
+                      ablation, target_fnr, seed=SEED, n_boot=300):
+    """Build & persist the arrays the two figures consume (deterministic).
+
+    Risk-coverage panel arrays (all on one coverage grid):
+      coverage_grid, ltt_curve (acceptance-threshold sweep == original AURC base),
+      sr_curve (softmax-response baseline), boot_lo/boot_hi (95% bootstrap CI
+      band around the SR/confidence-ranked curve), split_conformal operating
+      point, ltt operating point, safe_fnr (the <=5% shaded ceiling).
+    Ablation panel arrays: levels, base_fnr, retained_fnr, abstention.
+    """
+    y_te = np.asarray(y_te); p_te = np.asarray(p_te)
+    cov_grid = np.round(np.linspace(0.05, 1.0, 20), 4)
+
+    ltt_curve = _selective_fnr_by_coverage(y_te, p_te, cov_grid, order="threshold")
+    sr_curve = _selective_fnr_by_coverage(y_te, p_te, cov_grid, order="confidence")
+
+    # Deterministic bootstrap 95% CI around the confidence-ranked selective curve.
+    rb = np.random.RandomState(seed)
+    n = len(p_te)
+    boot = np.full((n_boot, len(cov_grid)), np.nan)
+    for b in range(n_boot):
+        idx = rb.randint(0, n, n)
+        boot[b] = _selective_fnr_by_coverage(y_te[idx], p_te[idx], cov_grid,
+                                             order="confidence")
+    boot_lo = np.nanpercentile(boot, 2.5, axis=0)
+    boot_hi = np.nanpercentile(boot, 97.5, axis=0)
+
+    # Split-conformal singleton-retention operating point.
+    cp_cov = float(np.asarray(cp_ret).mean()) if len(cp_ret) else 0.0
+    cp_fnr = (float(fnr_at(y_te[cp_ret], p_te[cp_ret], 0.5))
+              if np.asarray(cp_ret).sum() else float("nan"))
+
+    def _clean(a):
+        return [None if (x is None or (isinstance(x, float) and np.isnan(x)))
+                else float(x) for x in a]
+
+    return {
+        "moderate_mcar": {
+            "coverage_grid": [float(c) for c in cov_grid],
+            "ltt_curve": _clean(ltt_curve),
+            "sr_curve": _clean(sr_curve),
+            "sr_ci_lo": _clean(boot_lo),
+            "sr_ci_hi": _clean(boot_hi),
+            "ci_level": 0.95, "n_boot": int(n_boot),
+            "ltt_op": [float(ltt_op[0]), float(ltt_op[1])],
+            "split_conformal_op": [cp_cov, cp_fnr],
+            "safe_fnr": float(target_fnr),
+            "aurc": float(area_under_risk_coverage_curve(
+                *coverage_risk_curve(y_te, p_te)[:2])),
+        },
+        "ablation": {
+            "levels": [a["level"] for a in ablation],
+            "base_fnr": [float(a["base_fnr"]) for a in ablation],
+            "retained_fnr": [float(a["retained_fnr_test"]) for a in ablation],
+            "abstention": [float(a["abstention"]) for a in ablation],
+            "target_fnr": float(target_fnr),
+        },
+    }
 
 
 if __name__ == "__main__":

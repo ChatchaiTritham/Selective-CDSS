@@ -1,0 +1,161 @@
+{
+  "cohort": {
+    "n": 1140,
+    "n_features": 48,
+    "prevalence": 0.34035087719298246,
+    "n_per_disease": 380,
+    "seed": 42,
+    "margin": 0.1,
+    "target_fnr": 0.05
+  },
+  "split": {
+    "train": 570,
+    "cal": 285,
+    "test": 285
+  },
+  "clean": {
+    "tau": 0.46,
+    "base_fnr": 0.030927835051546393,
+    "base_acc": 0.9859649122807017,
+    "coverage": 0.9824561403508771,
+    "abstention": 0.01754385964912286,
+    "retained_fnr_test": 0.010638297872340425,
+    "cal_empirical_risk": 0.041237113402061855,
+    "risk_controlled": true,
+    "aurc": 0.01566045201565875
+  },
+  "mechanisms": {
+    "mcar": {
+      "tau": 0.38,
+      "base_fnr": 0.10309278350515463,
+      "base_acc": 0.8421052631578947,
+      "coverage": 0.6491228070175439,
+      "abstention": 0.3508771929824561,
+      "retained_fnr_test": 0.02197802197802198,
+      "risk_controlled": true,
+      "aurc": 0.1539100212447194
+    },
+    "mar": {
+      "tau": 0.31,
+      "base_fnr": 0.2268041237113402,
+      "base_acc": 0.7894736842105263,
+      "coverage": 0.656140350877193,
+      "abstention": 0.343859649122807,
+      "retained_fnr_test": 0.0,
+      "risk_controlled": true,
+      "aurc": 0.222327434675812
+    },
+    "mnar": {
+      "tau": 0.24000000000000002,
+      "base_fnr": 0.21649484536082475,
+      "base_acc": 0.9052631578947369,
+      "coverage": 0.624561403508772,
+      "abstention": 0.375438596491228,
+      "retained_fnr_test": 0.011363636363636364,
+      "risk_controlled": true,
+      "aurc": 0.08580457650585921
+    }
+  },
+  "ablation_mcar": [
+    {
+      "level": "clean",
+      "rate": 0.0,
+      "noise_sigma": 0.0,
+      "base_fnr": 0.030927835051546393,
+      "retained_fnr_test": 0.010638297872340425,
+      "abstention": 0.01754385964912286,
+      "aurc": 0.01566045201565875,
+      "risk_controlled": true,
+      "tau": 0.46
+    },
+    {
+      "level": "mild",
+      "rate": 0.2,
+      "noise_sigma": 0.3,
+      "base_fnr": 0.030927835051546393,
+      "retained_fnr_test": 0.010638297872340425,
+      "abstention": 0.30877192982456136,
+      "aurc": 0.11751117621151855,
+      "risk_controlled": true,
+      "tau": 0.43
+    },
+    {
+      "level": "moderate",
+      "rate": 0.35,
+      "noise_sigma": 0.6,
+      "base_fnr": 0.10309278350515463,
+      "retained_fnr_test": 0.02197802197802198,
+      "abstention": 0.3508771929824561,
+      "aurc": 0.1539100212447194,
+      "risk_controlled": true,
+      "tau": 0.38
+    },
+    {
+      "level": "severe",
+      "rate": 0.5,
+      "noise_sigma": 0.9,
+      "base_fnr": 0.25773195876288657,
+      "retained_fnr_test": 0.011627906976744186,
+      "abstention": 0.37192982456140355,
+      "aurc": 0.18715706349434577,
+      "risk_controlled": true,
+      "tau": 0.28
+    }
+  ],
+  "logreg_moderate_mcar": {
+    "base_fnr": 0.38144329896907214,
+    "retained_fnr_test": 0.0,
+    "abstention": 0.6947368421052631,
+    "risk_controlled": false
+  },
+  "baselines_moderate_mcar": {
+    "target_fnr": 0.05,
+    "methods": [
+      {
+        "method": "Full automation",
+        "retained_fnr": 0.10309278350515463,
+        "coverage": 1.0,
+        "targets_fnr": false
+      },
+      {
+        "method": "Softmax-response (matched coverage)",
+        "retained_fnr": 0.05194805194805195,
+        "coverage": 0.6491228070175439,
+        "targets_fnr": false
+      },
+      {
+        "method": "Split-conformal (alpha=0.05)",
+        "retained_fnr": 0.04819277108433735,
+        "coverage": 0.7403508771929824,
+        "targets_fnr": false
+      },
+      {
+        "method": "LTT risk control (ours)",
+        "retained_fnr": 0.02197802197802198,
+        "coverage": 0.6491228070175439,
+        "targets_fnr": true,
+        "certified": true
+      }
+    ]
+  },
+  "harm_moderate_mcar": {
+    "policy": "abstain iff |p-tau|<0.10; harm on retained only",
+    "full_automation": {
+      "R1": 0.03508771929824561,
+      "R2": 0.03571428571428571,
+      "R3": 0.20689655172413793,
+      "R4": 0.49122807017543857,
+      "R5": 0.017543859649122806
+    },
+    "selective_retained": {
+      "R1": 0.03571428571428571,
+      "R3": 0.5333333333333333,
+      "R4": 0.49122807017543857,
+      "R5": 0.017543859649122806
+    },
+    "missed_pos_full": 10,
+    "missed_pos_retained": 4,
+    "n_abstained": 100,
+    "deferred_pos": 6
+  }
+}

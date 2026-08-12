@@ -113,3 +113,19 @@ Released under the MIT License (see `LICENSE`). The vendored `basics_cdss` packa
 | Selective-CDSS | Risk-controlled selective-prediction (abstention) component |
 | Causal-CDSS | Causal-inference evaluation component |
 | Beyond-Accuracy | Simulation-based safety/calibration evaluation framework |
+
+## Relationship to our other repositories
+
+The package under `src/basics_cdss/` is shared infrastructure: the same modules appear in
+several of our repositories covering complementary aspects of clinical decision support
+evaluation. Sharing it keeps one implementation of the common metric and simulation code
+rather than four divergent copies.
+
+What belongs to **this** study is the driver, the computed results and the figures:
+
+- `run_eval.py` — seeded evaluation driver
+- `results/real_results.json` — the computed results
+- `figures/` — the figures
+
+Anything under `src/basics_cdss/` that this study does not exercise is inherited from the
+shared package and is not part of the results reported here.

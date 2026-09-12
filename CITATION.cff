@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Selective-CDSS: Risk-Controlled Selective Prediction for Clinical Decision Services"
+abstract: >-
+  An abstention layer that wraps any probabilistic clinical classifier and holds
+  the false-negative rate of the decisions it keeps below a chosen ceiling, even
+  under degraded input data. The repository contains the reference
+  implementation, a deterministic seed-42 driver that regenerates every reported
+  metric to committed CSVs, and the figure generators.
+type: software
+authors:
+  - given-names: Chatchai
+    family-names: Tritham
+    email: chatchait66@nu.ac.th
+    orcid: "https://orcid.org/0000-0001-7899-228X"
+    affiliation: >-
+      Department of Computer Science and Information Technology, Faculty of
+      Science, Naresuan University, Phitsanulok 65000, Thailand
+  - given-names: Chakkrit Snae
+    family-names: Namahoot
+    email: chakkrits@nu.ac.th
+    orcid: "https://orcid.org/0000-0003-4660-4590"
+    affiliation: >-
+      Department of Computer Science and Information Technology, Faculty of
+      Science, Naresuan University, Phitsanulok 65000, Thailand
+license: MIT
+repository-code: "https://github.com/ChatchaiTritham/Selective-CDSS"
+version: 1.0.0
+keywords:
+  - clinical decision support systems
+  - selective prediction
+  - abstention
+  - risk control
+  - learn-then-test
+  - data quality degradation

@@ -41,6 +41,11 @@ C_TARGET = PALETTE[6]     # black -- 5% target line
 C_ABSTAIN = PALETTE[5]    # light blue -- abstention bars
 SAFE_GREEN = "#009E73"
 
+# ICT Express is a two-column letter; 	he\columnwidth measures 252 pt.
+# Drawing at exactly that width and including at \columnwidth means matplotlib
+# never has its type rescaled by LaTeX.
+COL_IN = 252.0 / 72.0
+
 
 def _arr(seq):
     """JSON list (with possible None) -> float array with NaN for None."""
@@ -60,7 +65,7 @@ def fig_risk_coverage(fd, out_dirs):
     cp_op = m["split_conformal_op"]
     ci_pct = int(round(float(m.get("ci_level", 0.95)) * 100))
 
-    fig, ax = plt.subplots(figsize=(3.7, 2.9))
+    fig, ax = plt.subplots(figsize=(COL_IN, 2.9))
 
     # Safe (<= target FNR) zone, shaded behind everything.
     ax.axhspan(0, safe, color=SAFE_GREEN, alpha=0.10, zorder=0,
@@ -96,7 +101,7 @@ def fig_risk_coverage(fd, out_dirs):
     ax.set_xlim(0, 1.0)
     ymax = np.nanmax([np.nanmax(sr), np.nanmax(ltt), np.nanmax(hi)])
     ax.set_ylim(0, max(0.12, float(ymax) * 1.05))
-    ax.legend(loc="upper right", fontsize=7)
+    ax.legend(loc="upper right", fontsize=9)
     for d in out_dirs:
         save_fig(fig, "fig_risk_coverage", out_dir=d)
     plt.close(fig)
@@ -112,7 +117,7 @@ def fig_ablation(fd, out_dirs):
     x = np.arange(len(labs))
 
     fig, (ax_top, ax_bot) = plt.subplots(
-        2, 1, figsize=(3.7, 4.0), sharex=True,
+        2, 1, figsize=(COL_IN, 4.0), sharex=True,
         gridspec_kw={"height_ratios": [2.0, 1.0]})
 
     # Top panel: baseline vs LTT-retained FNR + target line.
@@ -125,7 +130,7 @@ def fig_ablation(fd, out_dirs):
     ax_top.set_ylabel("False-negative rate")
     ax_top.set_ylim(bottom=0)
     ax_top.set_title("Safety holds as data quality degrades")
-    ax_top.legend(loc="upper left", fontsize=8)
+    ax_top.legend(loc="upper left", fontsize=9)
 
     # Bottom panel: abstention rate (the price paid).
     ax_bot.bar(x, ab, width=0.55, color=C_ABSTAIN, alpha=0.85,
@@ -135,7 +140,7 @@ def fig_ablation(fd, out_dirs):
     ax_bot.set_xticks(x)
     ax_bot.set_xticklabels(labs)
     ax_bot.set_xlabel("Data-quality degradation (MCAR severity)")
-    ax_bot.legend(loc="upper left", fontsize=8)
+    ax_bot.legend(loc="upper left", fontsize=9)
 
     for d in out_dirs:
         save_fig(fig, "fig_ablation", out_dir=d)

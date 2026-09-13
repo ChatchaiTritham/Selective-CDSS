@@ -37,6 +37,9 @@ from pathlib import Path
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
 from basics_cdss.temporal.disease_models import (
@@ -186,13 +189,26 @@ def evaluate(clf, X_cal, y_cal, X_te, y_te):
     cov = float(retained.mean())
     # retained TEST FNR (consistent policy, test fold)
     ret_fnr = fnr_at(y_te[retained], p_te[retained], tau) if retained.sum() else 0.0
+    ret_pos = int((y_te[retained] == 1).sum())
+    ret_fn = int(((y_te[retained] == 1) & (pred[retained] == 0)).sum())
     sp = selective_prediction_metrics(y_te, p_te, target_coverage=0.8, target_risk=0.10)
     return dict(tau=float(tau), base_fnr=float(base_fnr), base_acc=base_acc,
                 cal_empirical_risk=float(rc.empirical_risk),
                 risk_controlled=bool(rc.risk_controlled),
                 coverage=cov, abstention=float(1 - cov),
                 retained_fnr_test=float(ret_fnr), aurc=float(sp.aurc),
-                p_te=p_te, retained=retained, base_pred=base_pred)
+                retained_pos=ret_pos, retained_fn=ret_fn,
+                p_te=p_te, retained=retained, pred=pred, base_pred=base_pred)
+
+
+def clopper_pearson(k, n, alpha=0.05):
+    """Exact two-sided (1-alpha) binomial interval for k events in n trials."""
+    from scipy.stats import beta
+    if n == 0:
+        return 0.0, 1.0
+    lo = 0.0 if k == 0 else float(beta.ppf(alpha / 2, k, n - k + 1))
+    hi = 1.0 if k == n else float(beta.ppf(1 - alpha / 2, k + 1, n - k))
+    return lo, hi
 
 
 def tiers_from(p):
@@ -265,6 +281,16 @@ def main():
     print(f"    LogReg moderate: baseFNR={e_lr['base_fnr']:.3f} retFNR={e_lr['retained_fnr_test']:.3f} "
           f"ctrl={e_lr['risk_controlled']}")
 
+    # ---- model-agnostic check: neural base model (MLP) at moderate MCAR ----
+    mlp = make_pipeline(StandardScaler(),
+                        MLPClassifier(hidden_layer_sizes=(64, 32), alpha=1e-3, max_iter=1000,
+                                      early_stopping=True, random_state=SEED)).fit(X_tr, y_tr)
+    e_mlp = evaluate(mlp, Xc, y_cal, Xt, y_te)
+    results["mlp_moderate_mcar"] = {k: e_mlp[k] for k in
+                                    ["base_fnr", "retained_fnr_test", "abstention", "risk_controlled"]}
+    print(f"    MLP moderate: baseFNR={e_mlp['base_fnr']:.3f} retFNR={e_mlp['retained_fnr_test']:.3f} "
+          f"abstain={e_mlp['abstention']:.3f} ctrl={e_mlp['risk_controlled']}")
+
     # ---- M2: baseline comparison at moderate MCAR (why LTT?) ----------------
     # Same degraded cal/test; fixed target FNR=0.05. Three selective methods +
     # full automation, each reporting retained-FNR(test), coverage, and whether
@@ -319,16 +345,65 @@ def main():
     p_te, retained, base_pred = e["p_te"], e["retained"], e["base_pred"]
     tiers = tiers_from(p_te)
     harm_full = harm_by_risk_tier(y_te, base_pred, tiers)
-    harm_sel = harm_by_risk_tier(y_te[retained], base_pred[retained], tiers[retained])
+    harm_sel = harm_by_risk_tier(y_te[retained], e["pred"][retained], tiers[retained])
     fn_full = int(((y_te == 1) & (base_pred == 0)).sum())
-    fn_ret = int(((y_te[retained] == 1) & (base_pred[retained] == 0)).sum())
+    # Retained decisions are labelled by the calibrated threshold (policy), not 0.5.
+    fn_ret = int(((y_te[retained] == 1) & (e["pred"][retained] == 0)).sum())
     results["harm_moderate_mcar"] = {
         "policy": "abstain iff |p-tau|<0.10; harm on retained only",
         "full_automation": {k: float(v) for k, v in harm_full.items()},
         "selective_retained": {k: float(v) for k, v in harm_sel.items()},
         "missed_pos_full": fn_full, "missed_pos_retained": fn_ret,
         "n_abstained": int((~retained).sum()),
-        "deferred_pos": int((y_te[~retained] == 1).sum())}
+        "deferred_pos": int((y_te[~retained] == 1).sum()),
+        "retained_pos": e["retained_pos"],
+        "retained_fnr_ci95": clopper_pearson(fn_ret, e["retained_pos"])}
+
+    # ---- robustness 1: calibration mismatch (calibrate clean, deploy degraded) ----
+    # The matched experiments above assume the calibration set is degraded like the
+    # deployment stream. Here the threshold is calibrated on CLEAN data only.
+    print("[*] calibration mismatch (clean calibration -> degraded test)...")
+    mism = []
+    for name, rate, sig in [("mild", 0.20, 0.3), ("moderate", 0.35, 0.6), ("severe", 0.50, 0.9)]:
+        Xt = degrade(X_te0, cols, medians, "mcar", rate, sig)
+        em = evaluate(clf, X_cal0, y_cal, Xt, y_te)
+        lo, hi = clopper_pearson(em["retained_fn"], em["retained_pos"])
+        mism.append({"level": name, "base_fnr": em["base_fnr"], "retained_fnr_test": em["retained_fnr_test"],
+                     "retained_fn": em["retained_fn"], "retained_pos": em["retained_pos"],
+                     "retained_fnr_ci95": [lo, hi], "abstention": em["abstention"],
+                     "meets_target": em["retained_fnr_test"] <= TARGET_FNR})
+        print(f"    {name}: retFNR={em['retained_fnr_test']:.3f} ({em['retained_fn']}/{em['retained_pos']}) "
+              f"abstain={em['abstention']:.3f}")
+    results["calibration_mismatch_mcar"] = mism
+
+    # ---- robustness 2: ten independent splits at moderate MCAR ----
+    print("[*] repeated splits (10 seeds, moderate MCAR)...")
+    reps = []
+    for s in range(10):
+        a_tr, a_tmp, b_tr, b_tmp = train_test_split(X, y, test_size=0.5, random_state=s, stratify=y)
+        a_cal, a_te, b_cal, b_te = train_test_split(a_tmp, b_tmp, test_size=0.5, random_state=s, stratify=b_tmp)
+        med_s = {c: float(np.median(a_tr[:, j])) for j, c in enumerate(cols)}
+        clf_s = RandomForestClassifier(n_estimators=300, max_depth=12, random_state=s, n_jobs=-1).fit(a_tr, b_tr)
+        es = evaluate(clf_s, degrade(a_cal, cols, med_s, "mcar", 0.35, 0.6, seed=s), b_cal,
+                      degrade(a_te, cols, med_s, "mcar", 0.35, 0.6, seed=s), b_te)
+        reps.append({"seed": s, "base_fnr": es["base_fnr"], "retained_fnr_test": es["retained_fnr_test"],
+                     "retained_fn": es["retained_fn"], "retained_pos": es["retained_pos"],
+                     "abstention": es["abstention"], "risk_controlled": es["risk_controlled"]})
+    r_fnr = np.array([r["retained_fnr_test"] for r in reps])
+    b_fnr = np.array([r["base_fnr"] for r in reps])
+    ab = np.array([r["abstention"] for r in reps])
+    results["repeated_splits_moderate_mcar"] = {
+        "runs": reps,
+        "retained_fnr_mean": float(r_fnr.mean()), "retained_fnr_sd": float(r_fnr.std(ddof=1)),
+        "retained_fnr_max": float(r_fnr.max()),
+        "n_runs_above_target": int((r_fnr > TARGET_FNR).sum()),
+        "base_fnr_mean": float(b_fnr.mean()), "base_fnr_sd": float(b_fnr.std(ddof=1)),
+        "abstention_mean": float(ab.mean()), "abstention_sd": float(ab.std(ddof=1)),
+        "pooled_retained_fn": int(sum(r["retained_fn"] for r in reps)),
+        "pooled_retained_pos": int(sum(r["retained_pos"] for r in reps)),
+    }
+    print(f"    retFNR mean={r_fnr.mean():.3f} sd={r_fnr.std(ddof=1):.3f} max={r_fnr.max():.3f} "
+          f">target={int((r_fnr > TARGET_FNR).sum())}/10")
 
     # ---- figure_data: persist EVERY array the figures need (seed-42 stable) ---
     # Separation of concerns: compute the curves HERE so generate_figures.py can

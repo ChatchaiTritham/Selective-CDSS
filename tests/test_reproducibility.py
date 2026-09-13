@@ -132,11 +132,15 @@ def test_degraded_is_risk_controlled(results, mech):
     assert results["mechanisms"][mech]["risk_controlled"] is True
 
 
-def test_missed_positives_drop_10_to_4(results):
-    """Moderate MCAR harm analysis: full automation misses 10, selective misses 4."""
+def test_missed_positives_drop_10_to_2(results):
+    """Moderate MCAR harm analysis: full automation misses 10; the calibrated policy misses 2 of 91
+    decided positives (retained decisions are labelled at tau-hat, not at 0.5)."""
     harm = results["harm_moderate_mcar"]
     assert harm["missed_pos_full"] == 10
-    assert harm["missed_pos_retained"] == 4
+    assert harm["missed_pos_retained"] == 2
+    assert harm["retained_pos"] == 91
+    assert abs(harm["missed_pos_retained"] / harm["retained_pos"]
+               - results["mechanisms"]["mcar"]["retained_fnr_test"]) < 1e-12
     assert harm["missed_pos_retained"] < harm["missed_pos_full"]
 
 
@@ -269,3 +273,13 @@ def test_live_rerun_matches_committed(results, tmp_path, monkeypatch):
         if abs(regen_flat[path] - exp) > LIVE_TOL:
             mismatches.append(f"{path}: {regen_flat[path]} != {exp}")
     assert not mismatches, "non-deterministic re-run:\n" + "\n".join(mismatches[:20])
+
+
+def test_robustness_blocks_present(results):
+    """Calibration-mismatch and repeated-split checks are persisted and self-consistent."""
+    mism = {r["level"]: r for r in results["calibration_mismatch_mcar"]}
+    assert set(mism) == {"mild", "moderate", "severe"}
+    assert mism["severe"]["meets_target"] is False
+    reps = results["repeated_splits_moderate_mcar"]
+    assert len(reps["runs"]) == 10
+    assert reps["n_runs_above_target"] == sum(r["retained_fnr_test"] > 0.05 for r in reps["runs"])

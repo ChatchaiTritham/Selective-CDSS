@@ -41,10 +41,11 @@ C_TARGET = PALETTE[6]     # black -- 5% target line
 C_ABSTAIN = PALETTE[5]    # light blue -- abstention bars
 SAFE_GREEN = "#009E73"
 
-# ICT Express is a two-column letter; 	he\columnwidth measures 252 pt.
-# Drawing at exactly that width and including at \columnwidth means matplotlib
+# Springer Nature sn-jnl single-column layout: \textwidth measures 372 pt.
+# Drawing at exactly that width and including at \textwidth means matplotlib
 # never has its type rescaled by LaTeX.
-COL_IN = 252.0 / 72.0
+COL_IN = 372.0 / 72.0
+FS = 8.5
 
 
 def _arr(seq):
@@ -52,8 +53,16 @@ def _arr(seq):
     return np.array([np.nan if v is None else float(v) for v in seq], dtype=float)
 
 
+def _style_axes(ax, grid="both"):
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    ax.grid(axis=grid, linewidth=0.4, alpha=0.35)
+    ax.set_axisbelow(True)
+    ax.tick_params(labelsize=FS)
+
+
 def fig_risk_coverage(fd, out_dirs):
-    """Risk-coverage with bootstrap CI, baselines, safe zone, LTT op point."""
+    """Selective FNR against coverage at moderate MCAR (test fold)."""
     import matplotlib.pyplot as plt
     m = fd["moderate_mcar"]
     cov = _arr(m["coverage_grid"])
@@ -65,83 +74,96 @@ def fig_risk_coverage(fd, out_dirs):
     cp_op = m["split_conformal_op"]
     ci_pct = int(round(float(m.get("ci_level", 0.95)) * 100))
 
-    fig, ax = plt.subplots(figsize=(COL_IN, 2.9))
-
-    # Safe (<= target FNR) zone, shaded behind everything.
-    ax.axhspan(0, safe, color=SAFE_GREEN, alpha=0.10, zorder=0,
-               label=f"Safe zone (FNR $\\leq$ {safe:.0%})")
-
-    # 95% bootstrap CI band around the confidence-ranked (SR) selective curve.
+    fig, ax = plt.subplots(figsize=(COL_IN, COL_IN * 0.50))
+    ax.axhspan(0, 100 * safe, color=SAFE_GREEN, alpha=0.10, linewidth=0, zorder=0,
+               label=f"At or below target ({safe:.0%})")
     band = np.isfinite(lo) & np.isfinite(hi)
-    ax.fill_between(cov[band], lo[band], hi[band], color=C_SR, alpha=0.18,
-                    linewidth=0, zorder=1, label=f"{ci_pct}% bootstrap CI")
-
-    # Baseline selective curves.
-    ax.plot(cov, sr, color=C_SR, linestyle="-", marker="", zorder=2,
-            label="Softmax-response baseline")
-    ax.plot(cov, ltt, color=C_LTT, linestyle="-", marker="", zorder=3,
-            label=f"Acceptance-threshold sweep (AURC = {float(m['aurc']):.3f})")
-
-    # Split-conformal single operating point.
+    ax.fill_between(cov[band], 100 * lo[band], 100 * hi[band], color=C_SR, alpha=0.18,
+                    linewidth=0, zorder=1, label=f"Softmax response, {ci_pct}% bootstrap CI")
+    ax.plot(cov, 100 * sr, color=C_SR, linewidth=1.4, zorder=2, label="Softmax response (confidence ranking)")
+    ax.plot(cov, 100 * ltt, color=C_LTT, linewidth=1.4, zorder=3,
+            label=f"Threshold-band sweep (AURC {float(m['aurc']):.3f})")
+    ax.axhline(100 * safe, color=C_TARGET, linestyle="--", linewidth=1.0, zorder=4)
     if cp_op and np.isfinite(cp_op[1]):
-        ax.scatter([cp_op[0]], [cp_op[1]], color=C_CP, marker="^", s=44,
-                   zorder=5, edgecolor="white", linewidth=0.6,
-                   label="Split-conformal (singletons)")
-
-    # Target line + LTT operating point.
-    ax.axhline(safe, color=C_TARGET, linestyle="--", linewidth=1.3, zorder=4,
-               label=f"Target FNR = {safe:.2f}")
-    ax.scatter([ltt_op[0]], [ltt_op[1]], color=C_LTT, marker="D", s=46,
-               zorder=6, edgecolor="white", linewidth=0.7,
-               label=f"LTT operating point (cov = {ltt_op[0]:.2f})")
-
-    ax.set_xlabel("Coverage (fraction of cases retained)")
-    ax.set_ylabel("Selective false-negative rate (test)")
-    ax.set_title("Risk-controlled selective prediction\n(moderate MCAR degradation)")
+        ax.scatter([cp_op[0]], [100 * cp_op[1]], color=C_CP, marker="^", s=40, zorder=5,
+                   edgecolor="black", linewidth=0.4, label="Split conformal (singleton sets)")
+    ax.scatter([ltt_op[0]], [100 * ltt_op[1]], color=C_LTT, marker="D", s=40, zorder=6,
+               edgecolor="black", linewidth=0.4, label=f"Calibrated operating point (coverage {ltt_op[0]:.2f})")
+    ax.set_xlabel("Coverage (fraction of test cases decided)", fontsize=FS + 0.5)
+    ax.set_ylabel("False-negative rate among\ndecided cases (%)", fontsize=FS + 0.5)
     ax.set_xlim(0, 1.0)
     ymax = np.nanmax([np.nanmax(sr), np.nanmax(ltt), np.nanmax(hi)])
-    ax.set_ylim(0, max(0.12, float(ymax) * 1.05))
-    ax.legend(loc="upper right", fontsize=9)
+    ax.set_ylim(0, 100 * max(0.12, float(ymax) * 1.05))
+    _style_axes(ax)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0), fontsize=FS - 0.5, frameon=False,
+              borderaxespad=0.0, handlelength=1.6)
+    fig.tight_layout(pad=0.3)
     for d in out_dirs:
         save_fig(fig, "fig_risk_coverage", out_dir=d)
     plt.close(fig)
 
 
-def fig_ablation(fd, out_dirs):
-    """Two stacked, x-aligned panels (FNR on top, abstention below)."""
+def fig_ablation(fd, results, out_dirs):
+    """(a) FNR by MCAR severity, matched vs clean calibration; (b) abstention; (c) ten splits."""
     import matplotlib.pyplot as plt
     a = fd["ablation"]
-    labs = [s.capitalize() for s in a["levels"]]
-    bf = _arr(a["base_fnr"]); rf = _arr(a["retained_fnr"])
-    ab = _arr(a["abstention"]); tgt = float(a["target_fnr"])
+    short = {"clean": "Clean", "mild": "Mild", "moderate": "Mod.", "severe": "Sev."}
+    labs = [short.get(s, s.capitalize()) for s in a["levels"]]
+    bf = 100 * _arr(a["base_fnr"])
+    rf = 100 * _arr(a["retained_fnr"])
+    ab = 100 * _arr(a["abstention"])
+    tgt = 100 * float(a["target_fnr"])
     x = np.arange(len(labs))
 
-    fig, (ax_top, ax_bot) = plt.subplots(
-        2, 1, figsize=(COL_IN, 4.0), sharex=True,
-        gridspec_kw={"height_ratios": [2.0, 1.0]})
+    mism = {r["level"]: r for r in results["calibration_mismatch_mcar"]}
+    mm_f = np.array([np.nan] + [100 * mism[k]["retained_fnr_test"] for k in ("mild", "moderate", "severe")])
+    mm_a = np.array([np.nan] + [100 * mism[k]["abstention"] for k in ("mild", "moderate", "severe")])
+    reps = results["repeated_splits_moderate_mcar"]["runs"]
 
-    # Top panel: baseline vs LTT-retained FNR + target line.
-    ax_top.plot(x, bf, color=C_BASE, marker="o", linestyle="-",
-                label="Baseline FNR (no abstention)")
-    ax_top.plot(x, rf, color=C_LTT, marker="s", linestyle="-",
-                label="LTT retained FNR (test)")
-    ax_top.axhline(tgt, color=C_TARGET, linestyle=":", linewidth=1.4,
-                   label=f"Target FNR = {tgt:.2f}")
-    ax_top.set_ylabel("False-negative rate")
-    ax_top.set_ylim(bottom=0)
-    ax_top.set_title("Safety holds as data quality degrades")
-    ax_top.legend(loc="upper left", fontsize=9)
+    fig, axes = plt.subplots(1, 3, figsize=(COL_IN, COL_IN * 0.40),
+                             gridspec_kw={"width_ratios": [1.35, 1.0, 0.75]})
+    ax = axes[0]
+    ax.plot(x, bf, color=C_BASE, marker="o", markersize=4, linewidth=1.3, label="No abstention")
+    ax.plot(x, rf, color=C_LTT, marker="s", markersize=4, linewidth=1.3, label="Calibrated on matched data")
+    ax.plot(x, mm_f, color=C_LTT, marker="s", markersize=4, markerfacecolor="white", linestyle="--",
+            linewidth=1.1, label="Calibrated on clean data")
+    ax.axhline(tgt, color=C_TARGET, linestyle=":", linewidth=1.0)
+    ax.text(x[-1], tgt + 0.8, "target", ha="right", va="bottom", fontsize=FS - 1)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labs, fontsize=FS - 0.5)
+    ax.set_ylabel("False-negative rate (%)", fontsize=FS + 0.5)
+    ax.set_ylim(0, 30)
+    ax.set_title("(a) FNR of decided cases", fontsize=FS, loc="left")
+    ax.legend(loc="upper left", fontsize=FS - 1, frameon=False, handlelength=1.8)
+    _style_axes(ax)
 
-    # Bottom panel: abstention rate (the price paid).
-    ax_bot.bar(x, ab, width=0.55, color=C_ABSTAIN, alpha=0.85,
-               label="Abstention rate")
-    ax_bot.set_ylabel("Abstention rate")
-    ax_bot.set_ylim(0, 1)
-    ax_bot.set_xticks(x)
-    ax_bot.set_xticklabels(labs)
-    ax_bot.set_xlabel("Data-quality degradation (MCAR severity)")
-    ax_bot.legend(loc="upper left", fontsize=9)
+    ax = axes[1]
+    w = 0.38
+    ax.bar(x - w / 2, ab, w, color=C_ABSTAIN, edgecolor="black", linewidth=0.4, label="Matched")
+    ax.bar(x + w / 2, np.nan_to_num(mm_a), w, color="white", edgecolor=C_LTT, hatch="////",
+           linewidth=0.6, label="Clean")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labs, fontsize=FS - 0.5)
+    ax.set_ylabel("Abstention (%)", fontsize=FS + 0.5)
+    ax.set_ylim(0, 50)
+    ax.set_title("(b) Cases deferred", fontsize=FS, loc="left")
+    ax.legend(loc="upper left", fontsize=FS - 1, frameon=False, title="Calibration", title_fontsize=FS - 1)
+    _style_axes(ax, "y")
 
+    ax = axes[2]
+    vals = np.array([100 * r["retained_fnr_test"] for r in reps])
+    jitter = np.linspace(-0.12, 0.12, len(vals))
+    ax.scatter(jitter, vals, s=16, color=C_LTT, edgecolor="black", linewidth=0.3, zorder=3)
+    ax.hlines(vals.mean(), -0.25, 0.25, color="black", linewidth=1.2, zorder=4)
+    ax.axhline(tgt, color=C_TARGET, linestyle=":", linewidth=1.0)
+    ax.set_xlim(-0.5, 0.5)
+    ax.set_xticks([])
+    ax.set_ylim(0, 10)
+    ax.set_ylabel("False-negative rate (%)", fontsize=FS + 0.5)
+    ax.set_title(f"(c) {len(vals)} random splits", fontsize=FS, loc="left")
+    _style_axes(ax, "y")
+
+    fig.tight_layout(pad=0.3, w_pad=0.9)
     for d in out_dirs:
         save_fig(fig, "fig_ablation", out_dir=d)
     plt.close(fig)
@@ -171,7 +193,7 @@ def generate_all(start=None, out_dirs=None):
     out_dirs = [Path(d) for d in out_dirs]
 
     fig_risk_coverage(fd, out_dirs)
-    fig_ablation(fd, out_dirs)
+    fig_ablation(fd, results, out_dirs)
     print("[OK] figures (risk_coverage + ablation) ->", ", ".join(map(str, out_dirs)))
 
 

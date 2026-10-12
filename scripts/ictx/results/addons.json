@@ -1,0 +1,453 @@
+{
+ "alpha": 0.05,
+ "delta": 0.1,
+ "margin": 0.1,
+ "mcar": {
+  "clean": {
+   "n_test_pos": 97,
+   "base_fn": 3,
+   "empirical": {
+    "tau": 0.46,
+    "coverage": 0.9824561403508771,
+    "retained_pos": 94,
+    "retained_fn": 1,
+    "retained_fnr": 0.010638297872340425,
+    "ci95": [
+     0.00026930211448559046,
+     0.057851339732670454
+    ]
+   },
+   "certified": {
+    "tau": 0.15000000000000002,
+    "coverage": 0.9368421052631579,
+    "retained_pos": 96,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03769692162358756
+    ]
+   }
+  },
+  "mild": {
+   "n_test_pos": 97,
+   "base_fn": 3,
+   "empirical": {
+    "tau": 0.43,
+    "coverage": 0.6912280701754386,
+    "retained_pos": 94,
+    "retained_fn": 1,
+    "retained_fnr": 0.010638297872340425,
+    "ci95": [
+     0.00026930211448559046,
+     0.057851339732670454
+    ]
+   },
+   "certified": {
+    "tau": 0.27,
+    "coverage": 0.7087719298245614,
+    "retained_pos": 96,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03769692162358756
+    ]
+   }
+  },
+  "moderate": {
+   "n_test_pos": 97,
+   "base_fn": 10,
+   "empirical": {
+    "tau": 0.38,
+    "coverage": 0.6491228070175439,
+    "retained_pos": 91,
+    "retained_fn": 2,
+    "retained_fnr": 0.02197802197802198,
+    "ci95": [
+     0.0026728114266242613,
+     0.07714539275460171
+    ]
+   },
+   "certified": {
+    "tau": 0.31,
+    "coverage": 0.6771929824561403,
+    "retained_pos": 93,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.0388889985342758
+    ]
+   }
+  },
+  "severe": {
+   "n_test_pos": 97,
+   "base_fn": 25,
+   "empirical": {
+    "tau": 0.28,
+    "coverage": 0.6280701754385964,
+    "retained_pos": 86,
+    "retained_fn": 1,
+    "retained_fnr": 0.011627906976744186,
+    "ci95": [
+     0.00029434978669505487,
+     0.06309051627850094
+    ]
+   },
+   "certified": {
+    "tau": 0.23,
+    "coverage": 0.6947368421052632,
+    "retained_pos": 90,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.040158919615774634
+    ]
+   }
+  }
+ },
+ "mech": {
+  "mcar": {
+   "n_test_pos": 97,
+   "base_fn": 10,
+   "empirical": {
+    "tau": 0.38,
+    "coverage": 0.6491228070175439,
+    "retained_pos": 91,
+    "retained_fn": 2,
+    "retained_fnr": 0.02197802197802198,
+    "ci95": [
+     0.0026728114266242613,
+     0.07714539275460171
+    ]
+   },
+   "certified": {
+    "tau": 0.31,
+    "coverage": 0.6771929824561403,
+    "retained_pos": 93,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.0388889985342758
+    ]
+   }
+  },
+  "mar": {
+   "n_test_pos": 97,
+   "base_fn": 22,
+   "empirical": {
+    "tau": 0.31,
+    "coverage": 0.656140350877193,
+    "retained_pos": 88,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.041052629058078
+    ]
+   },
+   "certified": {
+    "tau": 0.24000000000000002,
+    "coverage": 0.7473684210526316,
+    "retained_pos": 92,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03930328773951803
+    ]
+   }
+  },
+  "mnar": {
+   "n_test_pos": 97,
+   "base_fn": 21,
+   "empirical": {
+    "tau": 0.24000000000000002,
+    "coverage": 0.624561403508772,
+    "retained_pos": 88,
+    "retained_fn": 1,
+    "retained_fnr": 0.011363636363636364,
+    "ci95": [
+     0.0002876609811015656,
+     0.06169375395938655
+    ]
+   },
+   "certified": {
+    "tau": 0.04,
+    "coverage": 0.8456140350877193,
+    "retained_pos": 96,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03769692162358756
+    ]
+   }
+  }
+ },
+ "repeated_splits_moderate": [
+  {
+   "n_test_pos": 97,
+   "base_fn": 19,
+   "empirical": {
+    "tau": 0.32,
+    "coverage": 0.5964912280701754,
+    "retained_pos": 89,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.04060085754963182
+    ]
+   },
+   "certified": {
+    "tau": 0.28,
+    "coverage": 0.6,
+    "retained_pos": 90,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.040158919615774634
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 14,
+   "empirical": {
+    "tau": 0.33,
+    "coverage": 0.5614035087719298,
+    "retained_pos": 90,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.040158919615774634
+    ]
+   },
+   "certified": {
+    "tau": 0.25,
+    "coverage": 0.6456140350877193,
+    "retained_pos": 96,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03769692162358756
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 13,
+   "empirical": {
+    "tau": 0.31,
+    "coverage": 0.6736842105263158,
+    "retained_pos": 92,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03930328773951803
+    ]
+   },
+   "certified": {
+    "tau": 0.17,
+    "coverage": 0.743859649122807,
+    "retained_pos": 96,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03769692162358756
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 21,
+   "empirical": {
+    "tau": 0.38,
+    "coverage": 0.6140350877192983,
+    "retained_pos": 84,
+    "retained_fn": 5,
+    "retained_fnr": 0.05952380952380952,
+    "ci95": [
+     0.01960757823215596,
+     0.13346573291396713
+    ]
+   },
+   "certified": {
+    "tau": 0.27,
+    "coverage": 0.656140350877193,
+    "retained_pos": 94,
+    "retained_fn": 2,
+    "retained_fnr": 0.02127659574468085,
+    "ci95": [
+     0.0025871611133934844,
+     0.07475176597758049
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 12,
+   "empirical": {
+    "tau": 0.34,
+    "coverage": 0.6491228070175439,
+    "retained_pos": 91,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.039726497691849584
+    ]
+   },
+   "certified": {
+    "tau": 0.24000000000000002,
+    "coverage": 0.6947368421052632,
+    "retained_pos": 94,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03848335099752879
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 10,
+   "empirical": {
+    "tau": 0.43,
+    "coverage": 0.656140350877193,
+    "retained_pos": 85,
+    "retained_fn": 2,
+    "retained_fnr": 0.023529411764705882,
+    "ci95": [
+     0.002862331921648645,
+     0.08242374444957583
+    ]
+   },
+   "certified": {
+    "tau": 0.26,
+    "coverage": 0.6807017543859649,
+    "retained_pos": 95,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03808607757001057
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 14,
+   "empirical": {
+    "tau": 0.31,
+    "coverage": 0.6456140350877193,
+    "retained_pos": 92,
+    "retained_fn": 1,
+    "retained_fnr": 0.010869565217391304,
+    "ci95": [
+     0.00027515570277073876,
+     0.05907785114981476
+    ]
+   },
+   "certified": {
+    "tau": 0.25,
+    "coverage": 0.6631578947368421,
+    "retained_pos": 93,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.0388889985342758
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 13,
+   "empirical": {
+    "tau": 0.36000000000000004,
+    "coverage": 0.6421052631578947,
+    "retained_pos": 87,
+    "retained_fn": 1,
+    "retained_fnr": 0.011494252873563218,
+    "ci95": [
+     0.00029096694808025735,
+     0.06238432025416726
+    ]
+   },
+   "certified": {
+    "tau": 0.26,
+    "coverage": 0.6736842105263158,
+    "retained_pos": 95,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03808607757001057
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 21,
+   "empirical": {
+    "tau": 0.39,
+    "coverage": 0.6175438596491228,
+    "retained_pos": 77,
+    "retained_fn": 1,
+    "retained_fnr": 0.012987012987012988,
+    "ci95": [
+     0.0003287486514106065,
+     0.07024706064759671
+    ]
+   },
+   "certified": {
+    "tau": 0.32,
+    "coverage": 0.5789473684210527,
+    "retained_pos": 89,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.04060085754963182
+    ]
+   }
+  },
+  {
+   "n_test_pos": 97,
+   "base_fn": 11,
+   "empirical": {
+    "tau": 0.38,
+    "coverage": 0.6105263157894737,
+    "retained_pos": 89,
+    "retained_fn": 1,
+    "retained_fnr": 0.011235955056179775,
+    "ci95": [
+     0.0002844292949488092,
+     0.061018304347082615
+    ]
+   },
+   "certified": {
+    "tau": 0.28,
+    "coverage": 0.6596491228070176,
+    "retained_pos": 96,
+    "retained_fn": 0,
+    "retained_fnr": 0.0,
+    "ci95": [
+     0.0,
+     0.03769692162358756
+    ]
+   }
+  }
+ ]
+}

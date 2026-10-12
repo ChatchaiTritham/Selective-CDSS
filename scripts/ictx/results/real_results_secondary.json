@@ -1,0 +1,66 @@
+{
+  "domain": "industrial-IoT bearing-fault triage (synthetic telemetry)",
+  "cohort": {
+    "n": 600,
+    "n_features": 16,
+    "prevalence": 0.5,
+    "seed": 42,
+    "margin": 0.1,
+    "target_fnr": 0.05
+  },
+  "split": {
+    "train": 300,
+    "cal": 150,
+    "test": 150
+  },
+  "clean": {
+    "tau": 0.27,
+    "base_fnr": 0.4,
+    "coverage": 0.8,
+    "abstention": 0.19999999999999996,
+    "retained_fnr_test": 0.015151515151515152,
+    "risk_controlled": true
+  },
+  "ablation_mcar": [
+    {
+      "level": "clean",
+      "rate": 0.0,
+      "tau": 0.27,
+      "base_fnr": 0.4,
+      "coverage": 0.8,
+      "abstention": 0.19999999999999996,
+      "retained_fnr_test": 0.015151515151515152,
+      "risk_controlled": true
+    },
+    {
+      "level": "mild",
+      "rate": 0.2,
+      "tau": 0.29000000000000004,
+      "base_fnr": 0.3333333333333333,
+      "coverage": 0.82,
+      "abstention": 0.18000000000000005,
+      "retained_fnr_test": 0.0,
+      "risk_controlled": true
+    },
+    {
+      "level": "moderate",
+      "rate": 0.35,
+      "tau": 0.28,
+      "base_fnr": 0.32,
+      "coverage": 0.9133333333333333,
+      "abstention": 0.08666666666666667,
+      "retained_fnr_test": 0.0,
+      "risk_controlled": true
+    },
+    {
+      "level": "severe",
+      "rate": 0.5,
+      "tau": 0.38,
+      "base_fnr": 0.30666666666666664,
+      "coverage": 0.7466666666666667,
+      "abstention": 0.2533333333333333,
+      "retained_fnr_test": 0.017857142857142856,
+      "risk_controlled": true
+    }
+  ]
+}

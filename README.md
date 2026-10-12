@@ -59,6 +59,9 @@ pip install -e .            # installs deps + the vendored basics_cdss package
 
 ## Reproducing the results
 
+The analyses, JSON outputs, supplementary tables and figure of the ICT Express paper are in
+[`scripts/ictx/`](scripts/ictx/README.md); the release used by the paper is tag `v1.2.x`.
+
 ```bash
 python run_eval.py                  # COMPUTE: fixed seed 42; ~1 min on a standard CPU workstation
 python scripts/generate_figures.py  # PLOT ONLY: redraw figures from results/ (no retraining)
@@ -81,11 +84,11 @@ The cohort is fully synthetic: 1,140 simulated patient trajectories (380 each fo
 
 ```bibtex
 @article{tritham_selective_cdss,
-  title  = {Distribution-Free Safety Guarantees for AI Decision Services under
-            Degraded Data Quality via Risk-Controlled Selective Prediction},
+  title  = {Risk-Controlled Selective Prediction for AI Decision Services under
+            Degraded Data Quality},
   author = {Tritham, Chatchai and Snae Namahoot, Chakkrit},
   year   = {2026},
-  note   = {Manuscript under review (ICT Express)}
+  note   = {Manuscript}
 }
 ```
 

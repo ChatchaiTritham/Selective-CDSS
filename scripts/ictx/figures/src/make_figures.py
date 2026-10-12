@@ -95,3 +95,38 @@ a2.set_xticks(x); a2.set_xticklabels(["Clean", "Mild\n(20%, 0.3)", "Moderate\n(3
 a2.set_xlabel(r"MCAR degradation level (mask rate, noise $\sigma$)")
 fig.savefig(ROOT / "fig_ablation.pdf", bbox_inches="tight", pad_inches=0.02)
 print("ok")
+
+# ---- Fig. 1 (r6): true retained FNR over 50 independent runs -----------------
+_r6 = ROOT / "results/r6.json"
+if _r6.exists():
+    Q = json.loads(_r6.read_text())
+    ST = ["moderate", "severe", "mar", "mnar"]; LAB = ["MCAR\nmoderate", "MCAR\nsevere", "MAR", "MNAR"]
+    SER = [("full/empirical", BLUE, "Empirical, full cal."), ("full/selective_certified", ORANGE, "Selective-cert., full cal."),
+           ("half/empirical", BLUE, "Empirical, half cal."), ("half/selective_certified", ORANGE, "Selective-cert., half cal.")]
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(W, 0.95 * W), constrained_layout=True,
+                                 gridspec_kw={"height_ratios": [1.5, 1]})
+    for i, st in enumerate(ST):
+        for j, (k, col, lab) in enumerate(SER):
+            v = [100 * x for x in Q["H3_per_run"][st][k] if x is not None]
+            pos = i + (j - 1.5) * 0.2
+            bp = a1.boxplot(v, positions=[pos], widths=0.16, patch_artist=True, showfliers=False,
+                            medianprops=dict(color="k", lw=0.8), whiskerprops=dict(lw=0.6), capprops=dict(lw=0.6))
+            bp["boxes"][0].set(facecolor=col, alpha=0.9 if j < 2 else 0.35, lw=0.6, hatch="" if j < 2 else "///")
+            a1.plot(np.full(len(v), pos) + np.random.RandomState(j).uniform(-0.05, 0.05, len(v)), v, ".",
+                    color="k", ms=1.5, alpha=0.5)
+    a1.axhline(5, color=GREY, lw=0.8, ls=":")
+    a1.set_xticks(range(4)); a1.set_xticklabels([]); a1.set_ylabel("True retained FNR (%)"); a1.set_ylim(0, 12)
+    from matplotlib.patches import Patch
+    a1.legend(handles=[Patch(facecolor=c_, alpha=al, hatch=h, label=l) for (_, c_, l), al, h in
+                       zip(SER, [0.9, 0.9, 0.35, 0.35], ["", "", "///", "///"])],
+              loc="upper left", ncol=2, fontsize=6.5, handlelength=1.2, columnspacing=0.6)
+    for i, st in enumerate(ST):
+        v = [100 * x for x in Q["H3_acs_per_run"][st]]
+        a2.boxplot(v, positions=[i], widths=0.35, patch_artist=True, showfliers=False,
+                   boxprops=dict(facecolor=VERM, alpha=0.6, lw=0.6), medianprops=dict(color="k", lw=0.8))
+        a2.plot(np.full(len(v), i) + np.random.RandomState(9).uniform(-0.1, 0.1, len(v)), v, ".", color="k", ms=1.5, alpha=0.5)
+        a2.text(i, 33, f"{sum(x > 5 for x in v)}/{len(v)} runs > 5%" if i == 0 else f"{sum(x > 5 for x in v)}/{len(v)}", ha="center", fontsize=6.5)
+    a2.axhline(5, color=GREY, lw=0.8, ls=":")
+    a2.set_xticks(range(4)); a2.set_xticklabels(LAB); a2.set_ylim(0, 36)
+    a2.set_ylabel("ACS retained\nFNR (%)")
+    fig.savefig(ROOT / "fig_runs.pdf", bbox_inches="tight", pad_inches=0.02)

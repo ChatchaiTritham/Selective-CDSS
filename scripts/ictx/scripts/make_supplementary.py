@@ -1,4 +1,4 @@
-"""Build supplementary.tex (Tables S1-S9) from results/r2.json,
+"""Build supplementary.tex (Tables S1-S10) from results/r2.json,
 results/r4.json, results/r5.json and results/real_results_secondary.json. No numbers are typed by hand.
 Run from the package root: python scripts/make_supplementary.py"""
 import json
@@ -28,7 +28,7 @@ positives; CI = exact 95\% Clopper--Pearson; Abst.\ = abstention (\%);
 FPR = false-positive rate among retained negatives (\%). $\alpha=0.05$,
 $\delta=0.10$.
 
-\begin{table}[h]\centering\caption*{Table S1. Band half-width $m$ (clinical testbed, moderate MCAR, test fold, 97 positives).}
+\begin{table}[h]\centering\caption*{Table S1. Band half-width $m$ (clinical testbed, moderate MCAR, seed-42 test fold, 97 positives; single illustrative split).}
 \begin{tabular}{llcccc}\toprule $m$ & Rule & Miss & CI & Abst. & FPR\\\midrule"""]
 for m, v in d["E3_band"].items():
     for k in ["empirical", "certified", "selective_certified"]:
@@ -112,15 +112,21 @@ for st, v in r5["G2_subgroups_per_run"].items():
                  f"{x['runs_above']}/{x['runs']} & {r5['G3_mondrian_selective'][st]['certified_all3']}/50\\\\")
     o.append(r"\midrule")
 o[-1] = r"\bottomrule\end{tabular}\end{table}"
-o.append(r"""\begin{table}[h]\centering\caption*{Table S8. Calibration shift (seed-42 split, test fold): threshold calibrated on one setting and deployed on another.}
-\begin{tabular}{llcccc}\toprule Calibrated $\rightarrow$ deployed & Rule & Miss & CI & Abst. & FPR\\\midrule""")
+r6 = json.loads((R / "results/r6.json").read_text())
+o.append(r"""\begin{table}[h]\centering\caption*{Table S8. Calibration shift. Top: 50 independent runs (\texttt{run\_ictx\_r6.py}); the threshold is calibrated on one degradation of the calibration fold and evaluated on the independent pool under another. Exceed = runs with true retained FNR $>5\%$; mean/max true retained FNR and mean retained FPR in \%. Bottom: the seed-42 split alone (test fold), for reference.}
+\begin{tabular}{llcccc}\toprule Calibrated $\rightarrow$ deployed & Rule & Exceed & Mean & Max & FPR\\\midrule""")
+for k, v in r6["H2_shift"].items():
+    for rr in ["empirical", "selective_certified"]:
+        x = v[rr]; lab = k.replace("->", " $\\rightarrow$ ")
+        o.append(f"{lab} & {NMR[rr]} & {x['exceed']}/{x['n_certified']} & {100*x['rfnr_mean']:.1f} & {100*x['rfnr_max']:.1f} & {100*x['fpr_mean']:.1f}\\\\")
+o.append(r"""\midrule\multicolumn{6}{l}{\textit{Seed-42 split, test fold: Miss [95\% CI], abstention, FPR}}\\""")
 for k, v in r4["F4_calibration_shift"].items():
     for rr in ["empirical", "selective_certified"]:
         lab = k.replace("->", " $\\rightarrow$ ")
-        o.append(f"{lab} & {NMR[rr]} & {row(v[rr])}\\\\")
+        o.append(f"{lab} & {NMR[rr]} & \\multicolumn{{4}}{{c}}{{{row(v[rr]).replace('&', ',')}}}\\\\")
 o.append(r"\bottomrule\end{tabular}\end{table}")
 F3 = r4["F3_baselines_moderate"]
-o.append(r"""\begin{table}[h]\centering\caption*{Table S9. Moderate MCAR, test fold. Top: confidence ranking at the coverage of each LTT rule, labelled at 0.5 or centred on that rule's $\hat\tau$, and split conformal (LAC, $\alpha=0.05$, singletons retained). Bottom: sensitivity to $\delta$.}
+o.append(r"""\begin{table}[h]\centering\caption*{Table S9. Moderate MCAR, seed-42 test fold (single illustrative split). Top: confidence ranking at the coverage of each LTT rule, labelled at 0.5 or centred on that rule's $\hat\tau$, and split conformal (LAC, $\alpha=0.05$, singletons retained). Bottom: sensitivity to $\delta$.}
 \begin{tabular}{llcccc}\toprule Method & Coverage of & Miss & CI & Abst. & FPR\\\midrule""")
 for k in ["empirical", "certified", "selective_certified"]:
     o.append(f"Confidence, label 0.5 & {NMR[k]} & {row(F3['softmax_at_0.5/' + k])}\\\\")
@@ -129,6 +135,23 @@ o.append(f"Split conformal & -- & {row(F3['split_conformal'])}\\\\\\midrule")
 for dl, v in F3["delta_sensitivity"].items():
     for rr in ["certified", "selective_certified"]:
         o.append(f"$\\delta={dl}$ & {NMR[rr]} ($\\hat\\tau={v[rr]['tau']:.2f}$) & {row(v[rr])}\\\\")
-o.append(r"\bottomrule\end{tabular}\end{table}\end{document}")
+o.append(r"\bottomrule\end{tabular}\end{table}")
+
+RR = json.loads((R / "results/real_results.json").read_text())
+base = {x["level"]: x["base_fnr"] for x in RR["ablation_mcar"]}
+base.update({k: v["base_fnr"] for k, v in RR["mechanisms"].items() if k in ("mar", "mnar")})
+E1 = d["E1_rules"]
+o.append(r"""\begin{table}[h]\centering\caption*{Table S10. Test-fold results of one illustrative split (seed 42; $n=285$; 97 positives in the test and calibration folds; target FNR 5\%, $\delta=0.10$, $m=0.10$). Base: FNR at threshold 0.5, no abstention ($k$ = misses). Miss: retained misses/positives [95\% Clopper--Pearson upper bound]; Abst.: abstention; FPR: false-positive rate among retained negatives. Values in \% except counts. Fifty-run results are in Table S6.}
+\small\setlength{\tabcolsep}{3pt}\begin{tabular}{lcccccccccc}\toprule
+ & Base & \multicolumn{3}{c}{Empirical rule} & \multicolumn{3}{c}{Overall-cert.\ rule} & \multicolumn{3}{c}{Selective-cert.\ rule}\\
+Condition & FNR ($k$) & Miss [UB] & Abst. & FPR & Miss [UB] & Abst. & FPR & Miss [UB] & Abst. & FPR\\\midrule""")
+for key, lab in [("clean", "Clean"), ("mild", "Mild"), ("moderate", "Moderate"), ("severe", "Severe"), ("mar", "MAR"), ("mnar", "MNAR")]:
+    cells = []
+    for r_ in ["empirical", "certified", "selective_certified"]:
+        x = E1[key][r_]
+        cells.append(f"{x['retained_fn']}/{x['retained_pos']} [{100*x['ci95'][1]:.1f}] & {100*(1-x['coverage']):.1f} & {100*x['retained_fpr']:.1f}")
+    o.append(f"{lab} & {100*base[key]:.1f} ({round(base[key]*97)}) & " + " & ".join(cells) + "\\\\" + (r"\midrule" if key == "severe" else ""))
+o.append(r"\bottomrule\end{tabular}\end{table}")
+o.append(r"\end{document}")
 (R / "supplementary.tex").write_text("\n".join(o), encoding="utf-8")
 print("ok")

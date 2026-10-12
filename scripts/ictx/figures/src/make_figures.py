@@ -125,8 +125,8 @@ if _r6.exists():
         a2.boxplot(v, positions=[i], widths=0.35, patch_artist=True, showfliers=False,
                    boxprops=dict(facecolor=VERM, alpha=0.6, lw=0.6), medianprops=dict(color="k", lw=0.8))
         a2.plot(np.full(len(v), i) + np.random.RandomState(9).uniform(-0.1, 0.1, len(v)), v, ".", color="k", ms=1.5, alpha=0.5)
-        a2.text(i, 33, f"{sum(x > 5 for x in v)}/{len(v)} runs > 5%" if i == 0 else f"{sum(x > 5 for x in v)}/{len(v)}", ha="center", fontsize=6.5)
+        a2.text(i, 40, f"{sum(x > 5 for x in v)}/{len(v)} runs > 5%" if i == 0 else f"{sum(x > 5 for x in v)}/{len(v)}", ha="center", fontsize=6.5)
     a2.axhline(5, color=GREY, lw=0.8, ls=":")
-    a2.set_xticks(range(4)); a2.set_xticklabels(LAB); a2.set_ylim(0, 36)
+    a2.set_xticks(range(4)); a2.set_xticklabels(LAB); a2.set_ylim(0, 44)  # r7: MNAR ACS max 37.6% was clipped at 36
     a2.set_ylabel("ACS retained\nFNR (%)")
     fig.savefig(ROOT / "fig_runs.pdf", bbox_inches="tight", pad_inches=0.02)

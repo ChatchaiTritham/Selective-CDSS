@@ -95,7 +95,7 @@ Released under the MIT License (see `LICENSE`). The vendored `basics_cdss` packa
 
 ## Contact
 
-**Chatchai Tritham** — Department of Computer Science and Information Technology, Faculty of Science, Naresuan University, Phitsanulok 65000, Thailand. Email: chatchait66@nu.ac.th · ORCID: 0000-0001-7899-228X
+**Chatchai Tritham** — Department of Computer Science and Information Technology, Faculty of Science, Naresuan University, Phitsanulok 65000, Thailand. Email: chatchai.t@mail.rmutk.ac.th · ORCID: 0000-0001-7899-228X
 **Chakkrit Snae Namahoot** — same affiliation. Email: chakkrits@nu.ac.th · ORCID: 0000-0003-4660-4590
 
 ## Portfolio relationship

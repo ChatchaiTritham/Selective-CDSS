@@ -11,7 +11,7 @@ type: software
 authors:
   - given-names: Chatchai
     family-names: Tritham
-    email: chatchait66@nu.ac.th
+    email: chatchai.t@mail.rmutk.ac.th
     orcid: "https://orcid.org/0000-0001-7899-228X"
     affiliation: >-
       Department of Computer Science and Information Technology, Faculty of
@@ -25,7 +25,7 @@ authors:
       Science, Naresuan University, Phitsanulok 65000, Thailand
 license: MIT
 repository-code: "https://github.com/ChatchaiTritham/Selective-CDSS"
-version: 1.1.0
+version: 1.1.1
 keywords:
   - clinical decision support systems
   - selective prediction

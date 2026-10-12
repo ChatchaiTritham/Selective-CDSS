@@ -12,7 +12,7 @@ setup(
     name="selective-cdss",
     version="1.0.0",
     author="Chatchai Tritham, Chakkrit Snae Namahoot",
-    author_email="chatchait66@nu.ac.th, chakkrits@nu.ac.th",
+    author_email="chatchai.t@mail.rmutk.ac.th, chakkrits@nu.ac.th",
     description=(
         "Risk-controlled selective prediction (Learn-Then-Test conformal "
         "abstention) for clinical AI services under degraded data quality"

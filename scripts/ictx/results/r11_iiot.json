@@ -1,0 +1,112 @@
+{
+  "alpha": 0.05,
+  "delta": 0.1,
+  "margin": 0.1,
+  "note": "seed42 block lost: D: full at write time; runs50 parsed from stdout",
+  "runs50_pool9000": {
+    "clean": {
+      "empirical": {
+        "certified": 50,
+        "exceed": 2,
+        "mean_rfnr": 0.011309442111131994,
+        "max_rfnr": 0.059427936684254376,
+        "mean_abst": 0.21556444444444445,
+        "mean_rfpr": 0.9606967528335315
+      },
+      "overall_cert": {
+        "certified": 50,
+        "exceed": 0,
+        "mean_rfnr": 0.0015904340478627129,
+        "max_rfnr": 0.03951701427003293,
+        "mean_abst": 0.11031111111111111,
+        "mean_rfpr": 0.9945509269619143
+      },
+      "selective_cert": {
+        "certified": 50,
+        "exceed": 3,
+        "mean_rfnr": 0.019214742483475298,
+        "max_rfnr": 0.14554739865943186,
+        "mean_abst": 0.23424888888888887,
+        "mean_rfpr": 0.938281395445894
+      }
+    },
+    "mild": {
+      "empirical": {
+        "certified": 50,
+        "exceed": 0,
+        "mean_rfnr": 0.008839218756481136,
+        "max_rfnr": 0.04342857142857143,
+        "mean_abst": 0.23411555555555558,
+        "mean_rfpr": 0.9699828368866651
+      },
+      "overall_cert": {
+        "certified": 50,
+        "exceed": 0,
+        "mean_rfnr": 0.000931655278700983,
+        "max_rfnr": 0.008268871699119766,
+        "mean_abst": 0.11455777777777777,
+        "mean_rfpr": 0.9964688284580215
+      },
+      "selective_cert": {
+        "certified": 50,
+        "exceed": 5,
+        "mean_rfnr": 0.01857931094813728,
+        "max_rfnr": 0.07208196121478229,
+        "mean_abst": 0.27304,
+        "mean_rfpr": 0.9407578100058126
+      }
+    },
+    "moderate": {
+      "empirical": {
+        "certified": 50,
+        "exceed": 1,
+        "mean_rfnr": 0.008043198579809691,
+        "max_rfnr": 0.0518468315825144,
+        "mean_abst": 0.25254,
+        "mean_rfpr": 0.9758517961884237
+      },
+      "overall_cert": {
+        "certified": 50,
+        "exceed": 0,
+        "mean_rfnr": 0.0013729303520382292,
+        "max_rfnr": 0.01664876476906552,
+        "mean_abst": 0.1274977777777778,
+        "mean_rfpr": 0.9957278326911779
+      },
+      "selective_cert": {
+        "certified": 50,
+        "exceed": 7,
+        "mean_rfnr": 0.02050120957988176,
+        "max_rfnr": 0.08774728781110402,
+        "mean_abst": 0.3120644444444444,
+        "mean_rfpr": 0.9449807223615391
+      }
+    },
+    "severe": {
+      "empirical": {
+        "certified": 50,
+        "exceed": 3,
+        "mean_rfnr": 0.01078803439347365,
+        "max_rfnr": 0.057770800627943486,
+        "mean_abst": 0.2932511111111111,
+        "mean_rfpr": 0.9752158824845583
+      },
+      "overall_cert": {
+        "certified": 50,
+        "exceed": 0,
+        "mean_rfnr": 0.0009264797598136699,
+        "max_rfnr": 0.0053901437371663245,
+        "mean_abst": 0.14232222222222224,
+        "mean_rfpr": 0.9980045660934587
+      },
+      "selective_cert": {
+        "certified": 50,
+        "exceed": 2,
+        "mean_rfnr": 0.016339820596534813,
+        "max_rfnr": 0.07036247334754797,
+        "mean_abst": 0.3447533333333334,
+        "mean_rfpr": 0.9630421712703496
+      }
+    }
+  }
+}

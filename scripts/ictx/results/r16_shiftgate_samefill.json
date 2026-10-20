@@ -1,0 +1,55 @@
+{
+ "runs": 50,
+ "n_unlabelled": 285,
+ "same_fill": true,
+ "pairs": {
+  "clean->severe": {
+   "certified": 50,
+   "exceed_ungated": 46,
+   "shift_detected": 40,
+   "gated_certified": 10,
+   "exceed_gated": 10,
+   "rfnr_mean_ungated": 0.33471744093284095
+  },
+  "moderate->severe": {
+   "certified": 50,
+   "exceed_ungated": 31,
+   "shift_detected": 13,
+   "gated_certified": 37,
+   "exceed_gated": 24,
+   "rfnr_mean_ungated": 0.06968261198553162
+  },
+  "moderate->mnar": {
+   "certified": 50,
+   "exceed_ungated": 41,
+   "shift_detected": 50,
+   "gated_certified": 0,
+   "exceed_gated": 0,
+   "rfnr_mean_ungated": 0.1049879005498504
+  },
+  "moderate->moderate": {
+   "certified": 50,
+   "exceed_ungated": 0,
+   "shift_detected": 9,
+   "gated_certified": 41,
+   "exceed_gated": 0,
+   "rfnr_mean_ungated": 0.019806648859773596
+  },
+  "severe->severe": {
+   "certified": 50,
+   "exceed_ungated": 2,
+   "shift_detected": 11,
+   "gated_certified": 39,
+   "exceed_gated": 0,
+   "rfnr_mean_ungated": 0.019782378788167677
+  },
+  "mnar->mnar": {
+   "certified": 50,
+   "exceed_ungated": 3,
+   "shift_detected": 10,
+   "gated_certified": 40,
+   "exceed_gated": 2,
+   "rfnr_mean_ungated": 0.02025970722717471
+  }
+ }
+}

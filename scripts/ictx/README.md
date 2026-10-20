@@ -11,6 +11,7 @@ These scripts produce every number in the ICT Express paper "Risk-Controlled Sel
 | `scripts/run_ictx_r5.py` | `results/r5.json` | Independent-run design used in the paper: a fresh cohort per run, training-median imputation, the pool degraded anew per run, per-run subgroups and condition-wise (Mondrian) selective calibration (supersedes the r4 pool analysis) |
 | `scripts/run_ictx_r6.py` | `results/r6.json` | Same independent runs as r5 (verified identical) plus per-run workload, system FNR, calibration shift over 50 runs and per-run values for Fig. 1 |
 | `scripts/run_ictx_r16_shiftgate.py` | `results/r16_shiftgate_samefill.json` (`same_fill`), `results/r16_shiftgate.json` | Label-free shift gate on the r6 cohorts: domain-classifier Mann-Whitney test on 285 unlabelled pool inputs; refusal on detected shift (paper Sec. 3.5, Table S20) |
+| `scripts/run_ictx_r18_monitor.py` | `results/r18_monitor.json` | Anytime-valid retained-FNR monitor (mixture e-process, `scripts/realdata/monitor.py`) on the r16 runs (paper Sec. 3.5, Table S22) |
 | `scripts/make_supplementary.py` | `supplementary.tex` | Supplementary Tables S1–S10 |
 | `scripts/verify_refs.py` | — | Crossref lookup used to check the reference list |
 | `figures/src/make_figures.py` | `fig_runs.pdf` (Fig. 1); also `fig_ablation.pdf` and `fig_risk_coverage.pdf` (earlier drafts, not used) | Figures |
@@ -27,6 +28,7 @@ python scripts/run_ictx_r5.py ../.. results/r5.json
 python scripts/run_ictx_r6.py ../.. results/r6.json results/r5.json
 python scripts/run_ictx_r16_shiftgate.py ../.. results/r16_shiftgate.json
 python scripts/run_ictx_r16_shiftgate.py ../.. results/r16_shiftgate_samefill.json same_fill
+python scripts/run_ictx_r18_monitor.py ../.. results/r18_monitor.json
 python scripts/make_supplementary.py
 python figures/src/make_figures.py
 ```

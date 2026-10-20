@@ -1,0 +1,62 @@
+{
+ "alpha": 0.05,
+ "delta": 0.1,
+ "summary": [
+  {
+   "setting": "AtoA",
+   "exceed": false,
+   "runs": 41,
+   "alarms": 1,
+   "median_to_alarm": 3.0,
+   "median_ret_pos": 241.0
+  },
+  {
+   "setting": "AtoA",
+   "exceed": true,
+   "runs": 9,
+   "alarms": 1,
+   "median_to_alarm": 14.0,
+   "median_ret_pos": 231.0
+  },
+  {
+   "setting": "AtoB",
+   "exceed": true,
+   "runs": 50,
+   "alarms": 43,
+   "median_to_alarm": 30.0,
+   "median_ret_pos": 114.0
+  },
+  {
+   "setting": "BtoA",
+   "exceed": false,
+   "runs": 1,
+   "alarms": 0,
+   "median_to_alarm": null,
+   "median_ret_pos": 246.0
+  },
+  {
+   "setting": "BtoA",
+   "exceed": true,
+   "runs": 49,
+   "alarms": 49,
+   "median_to_alarm": 7.0,
+   "median_ret_pos": 233.0
+  },
+  {
+   "setting": "BtoB",
+   "exceed": false,
+   "runs": 44,
+   "alarms": 0,
+   "median_to_alarm": null,
+   "median_ret_pos": 136.0
+  },
+  {
+   "setting": "BtoB",
+   "exceed": true,
+   "runs": 6,
+   "alarms": 0,
+   "median_to_alarm": null,
+   "median_ret_pos": 137.0
+  }
+ ]
+}

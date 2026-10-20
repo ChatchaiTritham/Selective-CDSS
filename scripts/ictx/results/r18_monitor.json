@@ -1,0 +1,65 @@
+{
+ "runs": 50,
+ "pairs": {
+  "clean->severe": {
+   "certified": 50,
+   "exceed": 46,
+   "alarms_exceed": 44,
+   "median_to_alarm_exceed": 8.5,
+   "alarms_ok": 1,
+   "ok": 4,
+   "exceed_missed_by_gate": 10,
+   "of_which_alarmed": 9
+  },
+  "moderate->severe": {
+   "certified": 50,
+   "exceed": 31,
+   "alarms_exceed": 24,
+   "median_to_alarm_exceed": 55.0,
+   "alarms_ok": 0,
+   "ok": 19,
+   "exceed_missed_by_gate": 24,
+   "of_which_alarmed": 18
+  },
+  "moderate->mnar": {
+   "certified": 50,
+   "exceed": 41,
+   "alarms_exceed": 37,
+   "median_to_alarm_exceed": 84.0,
+   "alarms_ok": 0,
+   "ok": 9,
+   "exceed_missed_by_gate": 0,
+   "of_which_alarmed": 0
+  },
+  "moderate->moderate": {
+   "certified": 50,
+   "exceed": 0,
+   "alarms_exceed": 0,
+   "median_to_alarm_exceed": null,
+   "alarms_ok": 2,
+   "ok": 50,
+   "exceed_missed_by_gate": 0,
+   "of_which_alarmed": 0
+  },
+  "severe->severe": {
+   "certified": 50,
+   "exceed": 2,
+   "alarms_exceed": 0,
+   "median_to_alarm_exceed": null,
+   "alarms_ok": 0,
+   "ok": 48,
+   "exceed_missed_by_gate": 0,
+   "of_which_alarmed": 0
+  },
+  "mnar->mnar": {
+   "certified": 50,
+   "exceed": 3,
+   "alarms_exceed": 1,
+   "median_to_alarm_exceed": 3.0,
+   "alarms_ok": 0,
+   "ok": 47,
+   "exceed_missed_by_gate": 2,
+   "of_which_alarmed": 1
+  }
+ }
+}

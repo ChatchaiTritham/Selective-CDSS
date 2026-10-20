@@ -92,6 +92,25 @@ Parameters: α ∈ {0.05, 0.10}, δ = 0.10, m = 0.10.
   - It was added because GB certifications looked suspiciously perfect.
   - No pre-specified outcome was changed.
 
+## Addendum A1 (2026-10-20, written before running `run_shift.py`; post hoc relative to the main study)
+The main study showed cross-site failure (E3). A1 asks whether the failure can be caught or corrected
+WITHOUT target-site labels. It is exploratory: the main results above were already known.
+- Data, splits, seeds (1000-1049), model (LR only), alpha = 0.05, delta = 0.10, m = 0.10 as in the main study.
+- Per run and setting (A->A, B->B, A->B, B->A): the target test fold is split at random (seed) into an
+  unlabelled half U (used only for shift handling, labels never read) and an evaluation half E.
+- Shift gate: a domain classifier (median-impute + standardise + logistic regression) separates source
+  calibration inputs from U with 5-fold cross-fitted scores; one-sided Mann-Whitney test of AUC > 0.5.
+  If p <= delta the rule REFUSES (shift detected), else the ordinary selective rule is used.
+- Weighted rule: importance weights w(x) = c(x)/(1-c(x)) * n_cal/n_U from the cross-fitted domain
+  probabilities on source calibration points, clipped at 20. Weighted retained miss fraction f and Kish
+  effective size n_eff = (sum w)^2 / sum w^2 over retained positives; p-value = Pr[Bin(n_eff, alpha) <= f*n_eff]
+  via the regularised incomplete beta; same fixed-sequence scan. Approximate: assumes covariate shift
+  (p(y|x) shared) and estimated weights, so no finite-sample guarantee is claimed.
+- Outcomes on E: violations (retained FNR > alpha), refusals, mean retained FNR, coverage, retained FPR.
+- Expectations: A1-1 the gate rarely refuses within site (about delta) and almost always across sites;
+  A1-2 the weighted rule lowers cross-site violations relative to the unweighted rule, at some cost.
+  Reported whatever the result.
+
 ## Reproduce
 ```
 python -I scripts/realdata/download_data.py <DATA>        # 20,336 + 20,000 .psv, MANIFEST_sha256.txt
@@ -99,5 +118,6 @@ python -I scripts/realdata/build_features.py <DATA> <DATA>/features_w6.csv.gz
 python -I -W ignore scripts/realdata/run_realdata.py <DATA>/features_w6.csv.gz results/realdata 50
 python -I scripts/realdata/extras.py results/realdata
 python -I scripts/realdata/make_figures.py results/realdata results/realdata/figures
+python -I -W ignore scripts/realdata/run_shift.py <DATA>/features_w6.csv.gz results/realdata_shift 50
 ```
 Data manifest SHA-256 (sorted path/sha list): 82ba256812d9c7d8913159921811c114d8353fb4651631ad6a0c201ae48e9105.

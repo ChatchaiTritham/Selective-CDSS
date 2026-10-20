@@ -111,6 +111,19 @@ WITHOUT target-site labels. It is exploratory: the main results above were alrea
   A1-2 the weighted rule lowers cross-site violations relative to the unweighted rule, at some cost.
   Reported whatever the result.
 
+## Addendum A2 (2026-10-20, written before running the monitor; post hoc relative to A1)
+A1 showed that the label-free gate misses gradual drift. A2 adds a label-based anytime-valid monitor
+for the deployed threshold, in the spirit of Podkopaev & Ramdas (ICLR 2022).
+- Deployed threshold: the ungated selective-certified threshold of each run/setting (as in A1).
+- Stream: retained positives of the evaluation half E in random order (seed); X_i = 1 if missed.
+- e-process: E_t = mean over lambda in {1, 2, 5, 10, 15} of prod_{i<=t} (1 + lambda (X_i - alpha)),
+  alpha = 0.05; alarm when E_t >= 1/delta = 10. Under H0: rFNR <= alpha, Pr[ever alarm] <= delta (Ville).
+- Outcomes: alarm frequency and number of labelled retained positives until alarm, separately for runs
+  whose retained FNR on E exceeds alpha and runs that do not.
+- Expectation: alarms in most exceeding runs; alarms in at most about delta of non-exceeding runs.
+  Reported whatever the result. The same monitor is applied in simulation
+  (scripts/ictx/scripts/run_ictx_r18_monitor.py).
+
 ## Reproduce
 ```
 python -I scripts/realdata/download_data.py <DATA>        # 20,336 + 20,000 .psv, MANIFEST_sha256.txt
@@ -119,5 +132,6 @@ python -I -W ignore scripts/realdata/run_realdata.py <DATA>/features_w6.csv.gz r
 python -I scripts/realdata/extras.py results/realdata
 python -I scripts/realdata/make_figures.py results/realdata results/realdata/figures
 python -I -W ignore scripts/realdata/run_shift.py <DATA>/features_w6.csv.gz results/realdata_shift 50
+python -I -W ignore scripts/realdata/run_monitor.py <DATA>/features_w6.csv.gz results/realdata_monitor 50
 ```
 Data manifest SHA-256 (sorted path/sha list): 82ba256812d9c7d8913159921811c114d8353fb4651631ad6a0c201ae48e9105.

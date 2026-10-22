@@ -25,7 +25,7 @@ authors:
       Science, Naresuan University, Phitsanulok 65000, Thailand
 license: MIT
 repository-code: "https://github.com/ChatchaiTritham/Selective-CDSS"
-version: 1.2.6
+version: 1.2.7
 keywords:
   - clinical decision support systems
   - selective prediction

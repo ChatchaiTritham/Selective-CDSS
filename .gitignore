@@ -10,3 +10,6 @@ env/
 .ipynb_checkpoints/
 .DS_Store
 *.log
+
+# resumable-run caches (regenerated from seeds)
+*_cache.pkl

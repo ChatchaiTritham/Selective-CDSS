@@ -1,7 +1,7 @@
 {
   "title": "Selective-CDSS: Risk-Controlled Selective Prediction for AI Decision Services under Degraded Data Quality",
   "upload_type": "software",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "<p>Reference implementation and analyses for the paper \"Risk-Controlled Selective Prediction for AI Decision Services under Degraded Data Quality\". A model-agnostic abstention wrapper that sets its threshold with Learn-then-Test, so that the false-negative rate among retained decisions stays below an operator-set level under degraded input data.</p><p>The release contains:</p><ul><li>the testbed (<code>run_eval.py</code>, <code>run_eval_secondary.py</code>);</li><li>every analysis in the paper in <code>scripts/ictx/</code>: certified and selective-certified LTT rules, the independent-pool test over 50 independently simulated cohorts, per-run subgroups, condition-wise calibration, calibration shift, the SGR and conformal baselines, δ sensitivity and runtime;</li><li>the JSON outputs and the generators of the supplementary tables and figures.</li></ul><p>Every number except wall-clock timing is deterministic from fixed seeds.</p>",
   "creators": [
     {"name": "Tritham, Chatchai", "affiliation": "Department of Computer Science and Information Technology, Faculty of Science, Naresuan University", "orcid": "0000-0001-7899-228X"},

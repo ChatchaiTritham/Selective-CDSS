@@ -1,0 +1,66 @@
+{
+ "runs": 50,
+ "gate": "A4 sample-split permutation (B=999)",
+ "pairs": {
+  "clean->severe": {
+   "certified": 50,
+   "shift_detected": 29,
+   "exceed_ungated": 46,
+   "exceed_gated": 21,
+   "gate_missed_alarmed": 20,
+   "undetected_by_gate_and_monitor": 1,
+   "monitor_false_alarms": 1,
+   "within": 4
+  },
+  "moderate->severe": {
+   "certified": 50,
+   "shift_detected": 10,
+   "exceed_ungated": 31,
+   "exceed_gated": 26,
+   "gate_missed_alarmed": 19,
+   "undetected_by_gate_and_monitor": 7,
+   "monitor_false_alarms": 0,
+   "within": 19
+  },
+  "moderate->mnar": {
+   "certified": 50,
+   "shift_detected": 50,
+   "exceed_ungated": 41,
+   "exceed_gated": 0,
+   "gate_missed_alarmed": 0,
+   "undetected_by_gate_and_monitor": 0,
+   "monitor_false_alarms": 0,
+   "within": 9
+  },
+  "moderate->moderate": {
+   "certified": 50,
+   "shift_detected": 7,
+   "exceed_ungated": 0,
+   "exceed_gated": 0,
+   "gate_missed_alarmed": 0,
+   "undetected_by_gate_and_monitor": 0,
+   "monitor_false_alarms": 2,
+   "within": 50
+  },
+  "severe->severe": {
+   "certified": 50,
+   "shift_detected": 7,
+   "exceed_ungated": 2,
+   "exceed_gated": 1,
+   "gate_missed_alarmed": 0,
+   "undetected_by_gate_and_monitor": 1,
+   "monitor_false_alarms": 0,
+   "within": 48
+  },
+  "mnar->mnar": {
+   "certified": 50,
+   "shift_detected": 7,
+   "exceed_ungated": 3,
+   "exceed_gated": 2,
+   "gate_missed_alarmed": 1,
+   "undetected_by_gate_and_monitor": 1,
+   "monitor_false_alarms": 0,
+   "within": 47
+  }
+ }
+}

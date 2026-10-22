@@ -1,0 +1,156 @@
+{
+ "meta": {
+  "gate": "A4 sample-split permutation (B=999)",
+  "alpha": 0.05,
+  "delta": 0.1,
+  "margin": 0.1,
+  "n_runs": 50,
+  "model": "LR"
+ },
+ "summary": [
+  {
+   "setting": "AtoA",
+   "rule": "selective",
+   "runs": 50,
+   "refusals": 0,
+   "violations": 9,
+   "viol_ci": [
+    0.08576207810966366,
+    0.31436941128565027
+   ],
+   "rfnr_mean": 0.034917013887759196,
+   "coverage_mean": 0.6160821643286574,
+   "retained_fpr_mean": 0.8421490342711659,
+   "domain_auc_mean": 0.5013221380103565,
+   "shift_detected": 5,
+   "undetected_by_gate_and_monitor": 8,
+   "monitor_false_alarms": 1
+  },
+  {
+   "setting": "AtoA",
+   "rule": "shift_gated",
+   "runs": 50,
+   "refusals": 5,
+   "violations": 9,
+   "viol_ci": [
+    0.08576207810966366,
+    0.31436941128565027
+   ],
+   "rfnr_mean": 0.035425949953271134,
+   "coverage_mean": 0.6137775551102205,
+   "retained_fpr_mean": 0.8371619641595314,
+   "domain_auc_mean": 0.5013221380103565,
+   "shift_detected": 5,
+   "undetected_by_gate_and_monitor": 8,
+   "monitor_false_alarms": 1
+  },
+  {
+   "setting": "AtoB",
+   "rule": "selective",
+   "runs": 50,
+   "refusals": 0,
+   "violations": 50,
+   "viol_ci": [
+    0.9288782635358024,
+    1.0
+   ],
+   "rfnr_mean": 0.18808436136794435,
+   "coverage_mean": 0.6315425667090216,
+   "retained_fpr_mean": 0.729069502627179,
+   "domain_auc_mean": 0.99420689370607,
+   "shift_detected": 50,
+   "undetected_by_gate_and_monitor": 7,
+   "monitor_false_alarms": 0
+  },
+  {
+   "setting": "AtoB",
+   "rule": "shift_gated",
+   "runs": 50,
+   "refusals": 50,
+   "violations": 0,
+   "viol_ci": [
+    0.0,
+    0.07112173646419764
+   ],
+   "rfnr_mean": null,
+   "coverage_mean": null,
+   "retained_fpr_mean": null,
+   "domain_auc_mean": 0.99420689370607,
+   "shift_detected": 50,
+   "undetected_by_gate_and_monitor": 0,
+   "monitor_false_alarms": 0
+  },
+  {
+   "setting": "BtoA",
+   "rule": "selective",
+   "runs": 50,
+   "refusals": 0,
+   "violations": 49,
+   "viol_ci": [
+    0.8935304542885001,
+    0.9994937720169592
+   ],
+   "rfnr_mean": 0.31261646544447685,
+   "coverage_mean": 0.7986923847695393,
+   "retained_fpr_mean": 0.5633856737228338,
+   "domain_auc_mean": 0.9945043569599801,
+   "shift_detected": 50,
+   "undetected_by_gate_and_monitor": 0,
+   "monitor_false_alarms": 0
+  },
+  {
+   "setting": "BtoA",
+   "rule": "shift_gated",
+   "runs": 50,
+   "refusals": 50,
+   "violations": 0,
+   "viol_ci": [
+    0.0,
+    0.07112173646419764
+   ],
+   "rfnr_mean": null,
+   "coverage_mean": null,
+   "retained_fpr_mean": null,
+   "domain_auc_mean": 0.9945043569599801,
+   "shift_detected": 50,
+   "undetected_by_gate_and_monitor": 0,
+   "monitor_false_alarms": 0
+  },
+  {
+   "setting": "BtoB",
+   "rule": "selective",
+   "runs": 50,
+   "refusals": 0,
+   "violations": 6,
+   "viol_ci": [
+    0.04533532077366385,
+    0.2431013167055626
+   ],
+   "rfnr_mean": 0.02391400404657545,
+   "coverage_mean": 0.6723506988564167,
+   "retained_fpr_mean": 0.9553323507949328,
+   "domain_auc_mean": 0.5004288287227052,
+   "shift_detected": 5,
+   "undetected_by_gate_and_monitor": 6,
+   "monitor_false_alarms": 0
+  },
+  {
+   "setting": "BtoB",
+   "rule": "shift_gated",
+   "runs": 50,
+   "refusals": 5,
+   "violations": 6,
+   "viol_ci": [
+    0.04533532077366385,
+    0.2431013167055626
+   ],
+   "rfnr_mean": 0.025001923397513438,
+   "coverage_mean": 0.6723817591416067,
+   "retained_fpr_mean": 0.956517097631488,
+   "domain_auc_mean": 0.5004288287227052,
+   "shift_detected": 5,
+   "undetected_by_gate_and_monitor": 6,
+   "monitor_false_alarms": 0
+  }
+ ]
+}

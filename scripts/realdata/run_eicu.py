@@ -1,7 +1,8 @@
 """Addendum A3 (PROTOCOL.md): refusal floor, label-free gate and anytime-valid monitor on the
 eICU Collaborative Research Database Demo v2.0.1 (open access, doi:10.13026/4mxk-na84).
 
-Usage: python -I -W ignore run_eicu.py <eicu_demo_dir> <out_dir> [n_runs=50]
+Usage: python -I -W ignore run_eicu.py <eicu_demo_dir> <out_dir> [n_runs=50] [split]
+With "split" the gate is the A4 sample-split permutation test (gate_split.py); default = A1 gate.
 <eicu_demo_dir> holds patient.csv.gz, hospital.csv.gz, apacheApsVar.csv.gz.
 Writes cohort.json, runs.csv and summary.json.
 """
@@ -17,6 +18,7 @@ from monitor import first_alarm, stream  # noqa: E402
 from run_realdata import model  # noqa: E402
 from run_shift import domain_scores  # noqa: E402
 from scipy.stats import mannwhitneyu  # noqa: E402
+from gate_split import gate_split  # noqa: E402
 
 ALPHAS, DELTA, M = (0.05, 0.10), 0.10, 0.10
 SOURCE, TARGET = {"Midwest", "West"}, {"South", "Northeast"}
@@ -42,7 +44,13 @@ def cohort(d):
     return X.to_numpy(float), y, site, p
 
 
+SPLIT = len(sys.argv) > 4 and sys.argv[4] == "split"
+
+
 def gate(Xc, Xu, seed):
+    if SPLIT:
+        refuse, _, auc = gate_split(Xc, Xu, seed, DELTA)
+        return refuse, auc
     cs, cu = domain_scores(Xc, Xu, seed)
     auc = float(np.mean(cu[:, None] > cs[None, :]) + 0.5 * np.mean(cu[:, None] == cs[None, :]))
     return float(mannwhitneyu(cu, cs, alternative="greater").pvalue) <= DELTA, auc
@@ -53,7 +61,7 @@ def main():
     n_runs = int(sys.argv[3]) if len(sys.argv) > 3 else 50
     X, y, site, p = cohort(d)
     S, T = site == "S", site == "T"
-    meta = dict(n=int(len(y)), deaths=int(y.sum()), hospitals=int(p.hospitalid.nunique()),
+    meta = dict(gate="A4 split" if SPLIT else "A1 cross-fitted", n=int(len(y)), deaths=int(y.sum()), hospitals=int(p.hospitalid.nunique()),
                 source=dict(n=int(S.sum()), deaths=int(y[S].sum()), hospitals=int(p[S].hospitalid.nunique())),
                 target=dict(n=int(T.sum()), deaths=int(y[T].sum()), hospitals=int(p[T].hospitalid.nunique())),
                 floors={str(a): RL.refusal_floor(a, DELTA) for a in ALPHAS})

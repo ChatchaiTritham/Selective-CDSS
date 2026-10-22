@@ -124,6 +124,29 @@ for the deployed threshold, in the spirit of Podkopaev & Ramdas (ICLR 2022).
   Reported whatever the result. The same monitor is applied in simulation
   (scripts/ictx/scripts/run_ictx_r18_monitor.py).
 
+## Addendum A3 (2026-10-22, written before running `run_eicu.py`): second real dataset
+Question: do the refusal floor, the label-free gate (A1) and the anytime-valid monitor (A2) behave on a
+second, independent multi-hospital ICU source? Exploratory; A1/A2 results were known.
+- Data: eICU Collaborative Research Database Demo v2.0.1 (PhysioNet, open access, ODbL;
+  doi:10.13026/4mxk-na84). Tables patient, hospital, apacheApsVar (SHA-256 checked against SHA256SUMS.txt).
+  apachePatientResult (APACHE predicted mortality) is NOT used, to avoid leakage.
+- Cohort: first ICU stay of each hospital stay; known hospital discharge status; hospital region known.
+  Outcome: in-hospital death (hospitaldischargestatus == Expired).
+- Features: apacheApsVar first-24-h physiology (value -1 = missing -> NaN), intubated, vent, dialysis,
+  GCS components, age (">89" -> 90), gender; missing indicators; median imputation inside the pipeline.
+- Sites: source S = Midwest + West, target T = South + Northeast (regions with unknown label excluded).
+- Model: class-weighted logistic regression (same pipeline as run_realdata.py), trained on 40% of S.
+- Runs: 50 (seeds 1000-1049); S split 40/20/40 train/calibration/test (stratified); T split in halves:
+  U (unlabelled, gate only) and E (evaluation); within-site check uses S-test halves the same way.
+- Rules: selective-certified LTT at alpha in {0.05, 0.10}, delta = 0.10, m = 0.10; uncorrected rule
+  (empirical, banded) at the same alpha.
+- Gate (A1 definition) on S-calibration inputs vs U: refusal rate within S and across S->T.
+- Monitor (A2 definition, alpha of the rule) on E for every deployed threshold (uncorrected always;
+  certified when it certifies): alarm and labels-to-alarm, split by whether retained FNR on E > alpha.
+- Expectations: alpha = 0.05 mostly refuses (calibration positives near or below the floor of 45);
+  gate refusals within S about delta; any detection across S->T reported as found; monitor false
+  alarms rare where retained FNR <= alpha. Reported whatever the result; small sample, descriptive.
+
 ## Reproduce
 ```
 python -I scripts/realdata/download_data.py <DATA>        # 20,336 + 20,000 .psv, MANIFEST_sha256.txt
@@ -133,5 +156,6 @@ python -I scripts/realdata/extras.py results/realdata
 python -I scripts/realdata/make_figures.py results/realdata results/realdata/figures
 python -I -W ignore scripts/realdata/run_shift.py <DATA>/features_w6.csv.gz results/realdata_shift 50
 python -I -W ignore scripts/realdata/run_monitor.py <DATA>/features_w6.csv.gz results/realdata_monitor 50
+python -I -W ignore scripts/realdata/run_eicu.py <EICU_DEMO_DIR> results/eicu 50
 ```
 Data manifest SHA-256 (sorted path/sha list): 82ba256812d9c7d8913159921811c114d8353fb4651631ad6a0c201ae48e9105.

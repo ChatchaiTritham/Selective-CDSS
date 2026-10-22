@@ -147,6 +147,26 @@ second, independent multi-hospital ICU source? Exploratory; A1/A2 results were k
   gate refusals within S about delta; any detection across S->T reported as found; monitor false
   alarms rare where retained FNR <= alpha. Reported whatever the result; small sample, descriptive.
 
+## Addendum A4 (2026-10-22, written before running the A4 scripts): finite-sample-valid gate
+A3 showed the A1 gate (5-fold cross-fitted scores + Mann-Whitney) refusing 17/50 exchangeable eICU runs
+at nominal delta = 0.10: cross-fitted scores are dependent, so the test is anti-conservative at small n.
+A4 replaces it by a sample-split classifier two-sample test (Lopez-Paz & Oquab, ICLR 2017;
+Kim, Ramdas, Singh & Wasserman, Ann. Stat. 2021), valid in finite samples under exchangeability:
+- Pool calibration inputs (label 0) and unlabelled deployment inputs U (label 1); split the pool 50/50 at
+  random, stratified by label (seed of the run).
+- Fit the same logistic domain classifier (median impute + standardise + LR) on the first half only.
+- Statistic: AUROC of its scores on the second half (U vs calibration).
+- p-value: permutation of the labels within the second half, B = 999 draws (seed 7000 + run),
+  p = (1 + #{perm AUROC >= observed}) / (B + 1). Refuse if p <= delta.
+- Everything else (data, runs, seeds, splits, U/E halves, thresholds, monitor) is unchanged from
+  A1 (PhysioNet), r16/r18 (simulation, same_fill) and A3 (eICU), so A4 differs only in the gate.
+- Outcomes: gate refusals in exchangeable settings (target: about delta), detection in shifted settings,
+  failures left undetected by gate, and by gate + monitor, per dataset.
+- Expectation: exchangeable refusal rates near 0.10 on all three datasets; some loss of power relative
+  to A1 because only half of the pooled inputs is scored. Reported whatever the result.
+Scripts: scripts/realdata/gate_split.py (test), run_shift_a4.py (PhysioNet), run_eicu.py --gate split
+(eICU), scripts/ictx/scripts/run_ictx_r22_gate_a4.py (simulation).
+
 ## Reproduce
 ```
 python -I scripts/realdata/download_data.py <DATA>        # 20,336 + 20,000 .psv, MANIFEST_sha256.txt
